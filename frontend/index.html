@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffix — Reinforcement-learning traffic signal control</title>
+  <meta name="description"
+    content="Traffix is a lightweight reinforcement-learning traffic signal controller. 60% less delay than fixed-time, 25% less than actuated — no GPU required.">
+  <meta name="theme-color" content="#0b0d0e">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0d0e'/%3E%3Crect x='21' y='9' width='22' height='46' rx='9' fill='%23101315' stroke='%231e2326' stroke-width='2'/%3E%3Ccircle cx='32' cy='20' r='5.5' fill='%233a2426'/%3E%3Ccircle cx='32' cy='32' r='5.5' fill='%23d9a13b'/%3E%3Ccircle cx='32' cy='44' r='5.5' fill='%231e3328'/%3E%3C/svg%3E">
+  <!-- og:image is resolved relative to the deployed origin; replace og.png
+       with an absolute URL once the site has a domain -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Traffix — Signals that learn">
+  <meta property="og:description"
+    content="Reinforcement-learning traffic signal control. 60% less delay than fixed-time, 25% less than actuated — no GPU required.">
+  <meta property="og:image" content="og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Traffix — Signals that learn">
+  <meta name="twitter:description"
+    content="Reinforcement-learning traffic signal control. 60% less delay than fixed-time — no GPU required.">
+  <meta name="twitter:image" content="og.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <!-- low-power detector: a phone showing the DESKTOP layout still has a
+       coarse pointer, so heavy effects (canvas glows, backdrop blurs,
+       animated background) key on this flag instead of viewport width -->
+  <script>
+    window.TFX_LOW_POWER = matchMedia('(pointer: coarse)').matches;
+    if (window.TFX_LOW_POWER) document.documentElement.classList.add('low-power');
+  </script>
+
+  <!-- styles are split by audience: base = every device,
+       desktop = ≥701px only, mobile = ≤860px only.
+       The media attributes let each device skip the other's sheet. -->
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/desktop.css" media="(min-width: 701px)">
+  <link rel="stylesheet" href="assets/css/mobile.css" media="(max-width: 860px)">
+
+  <!-- all scripts are deferred: nothing blocks first paint.
+       Order matters — GSAP before main.js, which checks for it. -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script defer src="assets/js/main.js"></script>
+  <script defer src="assets/js/hero-sim.js"></script>
+  <script defer src="assets/js/background.js"></script>
+</head>
+
+<body>
+  <canvas id="bg-dots"></canvas>
+
+  <nav id="nav">
+    <div class="nav-inner">
+      <a class="nav-mobile-btn btn btn-solid" href="app.html">Try Live</a>
+      <a class="brand" href="#">TRAF<i>FIX</i></a>
+      <div class="nav-links" id="nav-links">
+        <a href="#results">Results</a>
+        <a href="#how">How it works</a>
+        <a href="#demo">Demo</a>
+        <a href="#built">Engineering</a>
+      </div>
+      <a class="btn btn-solid" href="app.html">Try it live <span class="ar">→</span></a>
+      <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <header>
+    <canvas id="sim"></canvas>
+    <div class="hero-fade"></div>
+    <div class="hero-overlay-left"></div>
+    <div class="wrap hero-content">
+      <p class="kicker">fixing urban traffic</p>
+      <h1>
+        <span class="ln"><span>Traffic Lights</span></span>
+        <span class="ln"><span>that learn.</span></span>
+      </h1>
+      <p class="hero-sub">Real-time adaptive signal control powered by lightweight reinforcement learning.</p>
+      <div class="hero-cta">
+        <a class="btn btn-solid" href="app.html">Try it live <span class="ar">→</span></a>
+        <a class="btn btn-line" href="#how">How it works</a>
+      </div>
+    </div>
+    <div class="sim-hud" id="sim-hud" aria-hidden="true">
+      <div class="hud-modes-stack">
+        <div class="hud-mode-option active" id="opt-fixed">
+          <span class="hud-status-light"></span>
+          <span class="hud-mode-name">Fixed control</span>
+        </div>
+        <div class="hud-mode-option" id="opt-rl">
+          <span class="hud-status-light"></span>
+          <span class="hud-mode-name">RL control</span>
+        </div>
+      </div>
+      <div class="hud-term" id="term"></div>
+      <button class="hud-inject" id="btn-inject">▸ inject traffic</button>
+      <div class="hud-hint">card: switch controller · road: drop a car</div>
+    </div>
+    <div class="scroll-hint">SCROLL</div>
+  </header>
+
+  <section id="results">
+    <div class="wrap">
+      <p class="sec-tag rv">Results</p>
+      <h2 class="rv">Measured against the controllers cities actually run.</h2>
+      <p class="sec-sub rv d1">Evaluated in SUMO on a real signalized junction, against
+        the junction's own fixed-time program and a vehicle-actuated controller —
+        identical demand, identical random seeds.</p>
+      <div class="stat-grid">
+        <div class="stat rv">
+          <div class="num"><em>−</em><span class="count" data-to="60">0</span><em>%</em></div>
+          <div class="lbl">average delay vs. <b>fixed-time</b> control</div>
+        </div>
+        <div class="stat rv d1">
+          <div class="num"><em>−</em><span class="count" data-to="25">0</span><em>%</em></div>
+          <div class="lbl">average delay vs. <b>vehicle-actuated</b> control</div>
+        </div>
+        <div class="stat rv d2">
+          <div class="num"><span class="count" data-to="0">0</span> <em style="font-size:.55em">GPU</em></div>
+          <div class="lbl">a <b>tabular policy</b> decides in microseconds — no neural network at inference, no special
+            hardware</div>
+        </div>
+      </div>
+      <div class="rchart rv d1">
+        <h4>Average delay <span>indexed · fixed-time = 100 · lower is better</span></h4>
+        <div class="cbar"><span class="clbl">Fixed-time</span>
+          <div class="ctrack">
+            <div class="cfill" data-w="100"></div>
+          </div><span class="cval">100</span>
+        </div>
+        <div class="cbar"><span class="clbl">Actuated</span>
+          <div class="ctrack">
+            <div class="cfill" data-w="53"></div>
+          </div><span class="cval">53</span>
+        </div>
+        <div class="cbar hl"><span class="clbl">Traffix</span>
+          <div class="ctrack">
+            <div class="cfill" data-w="40"></div>
+          </div><span class="cval">40 · −60%</span>
+        </div>
+      </div>
+      <p class="note rv">Same routes, same seeds, both directions of comparison. Queue lengths and throughput are
+        measured live in the demo — run it on your own demand pattern.</p>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <p class="sec-tag rv">How it works</p>
+      <h2 class="rv">Three ideas, deliberately simple.</h2>
+      <p class="sec-sub rv d1">Most RL traffic controllers need a GPU and a leap of faith.
+        Traffix was designed backwards from what a traffic engineer would deploy.</p>
+      <div class="steps">
+        <div class="step rv">
+          <span class="no">01</span>
+          <div>
+            <h3>State reduction</h3>
+            <p class="tagline">thousands of raw signals → one compact state</p>
+          </div>
+          <p>Instead of feeding the agent raw camera or detector streams, Traffix
+            compresses each approach into a small discrete state — queue levels per
+            approach, current phase, demand level. The state space stays small enough
+            to learn fully and to inspect by hand.</p>
+        </div>
+        <div class="step rv">
+          <span class="no">02</span>
+          <div>
+            <h3>Tabular Q-learning</h3>
+            <p class="tagline">a lookup table, not a black box</p>
+          </div>
+          <p>The policy is a Q-table over that reduced state. Training is cheap,
+            inference is a table lookup, and every decision the controller can ever
+            make can be audited line by line. That's how it outperforms heavier
+            methods without their compute bill.</p>
+        </div>
+        <div class="step rv">
+          <span class="no">03</span>
+          <div>
+            <h3>Hybrid safety layer</h3>
+            <p class="tagline">the agent proposes, the safety layer disposes</p>
+          </div>
+          <p>A rule-based layer wraps the learned policy: minimum green of 5 s, a
+            must-switch cap of 30 s so no approach starves, and a guaranteed 3 s
+            yellow on every change. Even an untrained agent can't produce an unsafe
+            signal sequence.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="wrap">
+      <p class="sec-tag rv">Live demo</p>
+      <h2 class="rv">Don't take the numbers — watch them happen.</h2>
+      <div class="tour rv d1" id="tour" aria-hidden="true">
+        <div class="tour-chrome">
+          <i></i><i></i><i></i>
+          <span class="mono">traffix — live comparison</span>
+          <div class="tour-steps">
+            <b class="ts">1 · set demand</b><b class="ts">2 · run</b><b class="ts">3 · compare</b>
+          </div>
+        </div>
+        <div class="tour-body">
+          <div class="t-rail">
+            <span class="t-logo mono">t<i>f</i></span>
+            <span class="t-ric act">◧</span><span class="t-ric">⚙</span><span class="t-ric">⛶</span>
+          </div>
+          <aside class="t-side">
+            <h5 class="mono">SCENARIO BUILDER</h5>
+            <div class="t-app">
+              <header><b>North approach</b><span class="mono">4 lanes</span></header>
+              <div class="t-row"><label>Left</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+              <div class="t-row"><label>Straight</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+              <div class="t-row"><label>Right</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+            </div>
+            <div class="t-app">
+              <header><b>East approach</b><span class="mono">4 lanes</span></header>
+              <div class="t-row"><label>Left</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+              <div class="t-row"><label>Straight</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+              <div class="t-row"><label>Right</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+            </div>
+            <div class="t-presets">
+              <span class="tp" id="tp-target">N + S heavy</span><span class="tp">Off-peak</span>
+            </div>
+            <div class="t-kv"><label>SUMO seed</label><span class="mono">12356</span></div>
+            <div class="t-kv"><label>Q-table</label><span class="mono">demo policy</span></div>
+            <div class="t-deploy mono" id="t-deploy">Deploy scenario ▸</div>
+          </aside>
+          <div class="t-main">
+            <div class="t-top">
+              <span class="t-loc"><b>Live comparison</b><small class="mono">fixed-time vs RL · same seed</small></span>
+              <span class="t-chip mono">Q coverage <b id="t-cov">0%</b></span>
+              <div class="t-transport">
+                <span class="t-tbtn">↺</span>
+                <span class="t-tbtn" id="t-play">▶</span>
+                <span class="t-time mono" id="t-time">0 / 1000 s</span>
+                <span class="t-spd mono"><b class="act">1×</b><b>4×</b><b>10×</b><b>30×</b></span>
+              </div>
+            </div>
+            <div class="t-vps">
+              <div class="t-vp">
+                <span class="t-tag mono">FIXED-TIME</span>
+                <div class="t-road"></div>
+                <div class="t-road v"></div>
+                <span class="t-gate h r"></span>
+                <span class="t-gate v g"></span>
+                <span class="t-car h sg"></span>
+                <span class="t-car h sg2"></span>
+                <span class="t-car h sg3"></span>
+                <span class="t-car h sg" style="animation-delay:3.4s"></span>
+                <span class="t-car v dn" style="animation-delay:.7s"></span>
+                <span class="t-car v dn" style="animation-delay:3.1s"></span>
+                <span class="t-phase mono">phase 0 · 28 s</span>
+              </div>
+              <div class="t-vp">
+                <span class="t-tag t-amber mono">TRAFFIX RL</span>
+                <div class="t-road"></div>
+                <div class="t-road v"></div>
+                <span class="t-gate h g"></span>
+                <span class="t-gate v r"></span>
+                <span class="t-car h fl" style="animation-delay:0s"></span>
+                <span class="t-car h fl" style="animation-delay:1.5s"></span>
+                <span class="t-car h fl" style="animation-delay:3s"></span>
+                <span class="t-phase mono">phase 3 · 2 s · a=1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="t-dock">
+          <span class="t-anal mono">▾ ANALYTICS</span>
+          <table class="mono">
+            <thead>
+              <tr>
+                <th></th>
+                <th>avg wait</th>
+                <th>avg travel</th>
+                <th>thruput</th>
+                <th>queue</th>
+                <th>max q</th>
+                <th>waiting</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fixed</td>
+                <td id="tm-fw">—</td>
+                <td id="tm-fv">—</td>
+                <td id="tm-ft">—</td>
+                <td id="tm-fq">—</td>
+                <td id="tm-fm">—</td>
+                <td id="tm-fn">—</td>
+              </tr>
+              <tr>
+                <td>RL</td>
+                <td id="tm-rw">—</td>
+                <td id="tm-rv">—</td>
+                <td id="tm-rt">—</td>
+                <td id="tm-rq">—</td>
+                <td id="tm-rm">—</td>
+                <td id="tm-rn">—</td>
+              </tr>
+              <tr class="t-delta">
+                <td>Δ</td>
+                <td>+1.0s</td>
+                <td>+0.3s</td>
+                <td>+3</td>
+                <td>+14</td>
+                <td>+0</td>
+                <td>+3</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="t-chartcard">
+            <div class="t-chead mono"><span>TOTAL QUEUE OVER TIME</span><span class="t-leg"><i class="lf"></i>FIXED <i
+                  class="lr"></i>RL</span></div>
+            <svg class="t-chart" viewBox="0 0 200 40" preserveAspectRatio="none">
+              <path class="tc-fx" d="M0,34 C25,32 45,26 70,19 S130,7 200,5" pathLength="100" />
+              <path class="tc-rl" d="M0,34 C25,33 45,31 70,29 S130,27 200,28" pathLength="100" />
+            </svg>
+          </div>
+          <div class="t-chartcard">
+            <div class="t-chead mono"><span>MEAN WAIT PRESENT</span><span class="t-leg"><i class="lf"></i>FIXED <i
+                  class="lr"></i>RL</span></div>
+            <svg class="t-chart" viewBox="0 0 200 40" preserveAspectRatio="none">
+              <path class="tc-fx" d="M0,36 C30,34 60,28 90,21 S150,9 200,7" pathLength="100" />
+              <path class="tc-rl" d="M0,36 C30,35 60,33 90,31 S150,30 200,30" pathLength="100" />
+            </svg>
+          </div>
+        </div>
+        <div class="t-cursor" id="t-cursor"></div>
+      </div>
+      <div class="demo-foot rv d2">
+        <a class="btn btn-solid" href="app.html">Launch the real demo <span class="ar">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="built">
+    <div class="wrap">
+      <p class="sec-tag rv">Engineering</p>
+      <h2 class="rv">Built like a product, not a notebook.</h2>
+      <div class="feat-grid">
+        <div class="feat rv">
+          <h3>Faithful evaluation loop</h3>
+          <p>The demo backend drives SUMO through TraCI with the exact state
+            definition, action set, timing constants and metric equations used in
+            evaluation — no re-implementation drift between paper and product.</p>
+        </div>
+        <div class="feat rv d1">
+          <h3>Honest by construction</h3>
+          <p>Both controllers always receive the same routes file and the same
+            random seed. Q-table coverage of the visited states is reported live,
+            including when it's low.</p>
+        </div>
+        <div class="feat rv">
+          <h3>Runs anywhere</h3>
+          <p>SUMO installs from pip, the whole stack ships as one Docker image,
+            and the browser only renders frames — so the demo stays smooth on any
+            laptop and deploys to any host.</p>
+        </div>
+        <div class="feat rv d1">
+          <h3>Configurable, not hard-coded</h3>
+          <p>Every experiment constant — junction id, approach lanes, phase indices,
+            timing, seeds — lives in one config module and can be overridden by
+            environment variables to target a different junction.</p>
+        </div>
+      </div>
+      <div class="tech-strip rv d1">
+        <span>Python</span><span>SUMO / TraCI</span><span>Q-learning</span>
+        <span>FastAPI</span><span>WebSocket</span><span>Canvas 2D</span><span>Docker</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="cta">
+    <div class="wrap">
+      <p class="sec-tag rv">Two minutes</p>
+      <h2 class="rv">See a signal think.</h2>
+      <p class="sec-sub rv d1">Pick a demand pattern, press play, and watch the
+        learned controller pull ahead of the timer it replaces.</p>
+      <a class="btn btn-solid rv d2" style="font-size:16px;padding:14px 28px" href="app.html">Try it live <span
+          class="ar">→</span></a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="brand">TRAF<i>FIX</i></span>
+      <p>adaptive signal control · reinforcement learning · SUMO</p>
+    </div>
+  </footer>
+</body>
+
+</html>

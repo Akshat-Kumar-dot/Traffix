@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traffix — JUN1 Signal Control</title>
+<meta name="theme-color" content="#0b0d0e">
+<link rel="icon" type="image/svg+xml"
+  href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0d0e'/%3E%3Crect x='21' y='9' width='22' height='46' rx='9' fill='%23101315' stroke='%231e2326' stroke-width='2'/%3E%3Ccircle cx='32' cy='20' r='5.5' fill='%233a2426'/%3E%3Ccircle cx='32' cy='32' r='5.5' fill='%23d9a13b'/%3E%3Ccircle cx='32' cy='44' r='5.5' fill='%231e3328'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<aside id="rail">
+  <div class="rail-inner">
+    <div class="rail-icon-bar">
+      <a class="rail-logo" href="index.html" title="Traffix home" data-tip="Traffix home">T<i>F</i></a>
+      <button class="rail-btn act" data-tip="Operations" aria-label="Operations">◧</button>
+      <button class="rail-btn" id="btn-drawer" data-tip="Scenario builder" aria-label="Scenario builder">⚙</button>
+      <button class="rail-btn" id="btn-fit" data-tip="Fit view" aria-label="Fit view">⛶</button>
+      <div class="rail-spacer"></div>
+      <button class="rail-btn" id="btn-about" data-tip="About" aria-label="About">ℹ</button>
+    </div>
+    <div class="rail-drawer" id="rail-drawer">
+      <h2>Scenario builder</h2>
+      <p class="drawer-sub">Vehicles per hour, per approach and movement — identical flows feed both controllers.</p>
+      <div id="demand-grid"></div>
+      <div class="presets" id="presets">
+        <button data-p="hhhh">N + S heavy</button>
+        <button data-p="offpeak">Off-peak</button>
+        <button data-p="peak">Peak — all</button>
+        <button data-p="adom">North heavy</button>
+        <button data-p="bdom">East heavy</button>
+      </div>
+      <div class="drawer-row">
+        <label>Demand file</label>
+        <select id="in-demand-file"><option value="">Custom UI demand</option></select>
+      </div>
+      <div id="demand-file-info" class="drawer-note"></div>
+      <div class="drawer-row">
+        <label>SUMO seed</label><input class="mono" id="in-seed" type="number" value="12356">
+      </div>
+      <div class="drawer-row">
+        <label>Episode (s)</label><input class="mono" id="in-episode" type="number" value="1000" min="60" max="8000">
+      </div>
+      <div class="drawer-row">
+        <label>Q-table</label>
+        <select id="in-qtable"><option value="demo">demo policy</option></select>
+      </div>
+      <button id="btn-launch">Deploy scenario ▸</button>
+      <div id="launch-status" class="mono"></div>
+    </div>
+  </div>
+</aside>
+<div id="resizer-rail" class="col-resizer" aria-hidden="true"></div>
+
+<header id="topbar">
+  <div class="loc-chip">
+    <div>
+      <b id="loc-name">Live comparison</b>
+      <small id="loc-sub" class="mono">fixed-time vs RL · same traffic, same seed</small>
+    </div>
+  </div>
+  <div class="top-mid">
+    <span class="chip mono" id="chip-cov" style="display:none">coverage —</span>
+  </div>
+  <div class="transport">
+    <button class="tbtn" id="btn-reset" title="New run">↺</button>
+    <button class="tbtn" id="btn-play" title="Play / pause">▶</button>
+    <button class="tbtn" id="btn-step" title="Step one frame">▷</button>
+    <span class="t-box mono" id="chip-time">0 / 0 s</span>
+    <div class="speedset" id="speedset">
+      <button data-s="1" class="act">1×</button><button data-s="4">4×</button>
+      <button data-s="10">10×</button><button data-s="30">30×</button>
+    </div>
+  </div>
+</header>
+
+<main id="stage">
+  <section class="viewport" id="vp-fixed">
+    <div class="vp-head"><span class="vtag vt-fixed">FIXED-TIME</span></div>
+    <canvas></canvas>
+    <div class="sig-stack" data-side="fixed"></div>
+    <div class="phase-chip mono" data-side="fixed">phase — · 0 s</div>
+  </section>
+  <div id="resizer-stage" class="col-resizer" aria-hidden="true"></div>
+  <section class="viewport" id="vp-rl">
+    <div class="vp-head"><span class="vtag vt-rl">TRAFFIX RL</span></div>
+    <canvas></canvas>
+    <div class="sig-stack" data-side="rl"></div>
+    <div class="phase-chip mono" data-side="rl">phase — · 0 s</div>
+  </section>
+</main>
+<div id="resizer-dock" aria-hidden="true">
+  <button id="btn-analytics" class="analytics-toggle">▾ Analytics</button>
+</div>
+
+<footer id="dock">
+  <div class="dock-metrics">
+    <table id="mtable">
+      <thead><tr><th></th><th>Avg wait</th><th>Avg travel</th><th>Throughput</th><th>Total queue</th><th>Max queue</th><th>Waiting now</th></tr></thead>
+      <tbody>
+        <tr class="row-fixed"><td>Fixed</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr class="row-rl"><td>RL</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr class="row-delta"><td>Δ</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="dock-chart">
+    <div class="chart-head"><span>Total queue over time</span><span class="legend"><i class="lg-fx"></i>fixed <i class="lg-rl"></i>RL</span></div>
+    <canvas id="chart-queue" height="74"></canvas>
+  </div>
+  <div class="dock-chart">
+    <div class="chart-head"><span>Mean wait of vehicles present</span><span class="legend"><i class="lg-fx"></i>fixed <i class="lg-rl"></i>RL</span></div>
+    <canvas id="chart-wait" height="74"></canvas>
+  </div>
+</footer>
+
+
+
+<div id="about" hidden>
+  <div class="about-card">
+    <h2>Traffix</h2>
+    <p>Both panels are <b>real SUMO</b> simulations running server-side on the same network, routes and random seed. The left signal follows the junction's default fixed-time program. The right is controlled live by a trained tabular Q-learning agent — state <span class="mono">(qA,qB,qC,qD,phase,demand)</span>, four phase-skipping actions, safety layer (min-green 5 s, must-switch 30 s, 3 s yellow) — exactly the controller evaluated in the paper. Vehicles are coloured by accumulated waiting time. Drag to pan, scroll to zoom.</p>
+    <button onclick="document.getElementById('about').hidden=true">Close</button>
+  </div>
+</div>
+
+<script src="app.js?v=3"></script>
+</body>
+</html>

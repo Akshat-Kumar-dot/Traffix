@@ -1,0 +1,213 @@
+/* ════════════════════════════════════════════════════════════
+   TRAFFIX — desktop.css
+   Loaded with media="(min-width: 701px)" — phones never download
+   or apply this. Holds the parts of the hero that only exist on
+   wide screens: the text shield, the scroll hint and the sim HUD.
+   ════════════════════════════════════════════════════════════ */
+
+/* ════════ TEXT SHIELD — tune the dark patch here ════════
+   --shield-size   how far it reaches in from the left edge.
+                   42% ends well before the middle; raise/lower to taste.
+   --shield-solid  how much of that reach is fully dark before
+                   the fade-out begins (% of the shield itself).
+   --shield-blur   how strongly it blurs the world behind it.
+                   Set 0px for a pure darkening with no blur.  */
+:root {
+  --shield-size: 42%;
+  --shield-solid: 55%;
+  --shield-blur: 6px;
+}
+
+.hero-overlay-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--shield-size);
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(11, 13, 14, 0.97) 0%, rgba(11, 13, 14, 0.88) var(--shield-solid), rgba(11, 13, 14, 0) 100%);
+  backdrop-filter: blur(var(--shield-blur));
+  -webkit-backdrop-filter: blur(var(--shield-blur));
+  mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) var(--shield-solid), rgba(0, 0, 0, 0) 100%);
+  -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) var(--shield-solid), rgba(0, 0, 0, 0) 100%)
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  animation: fadeup 1s ease 1.4s forwards
+}
+
+.scroll-hint::after {
+  content: '';
+  width: 1px;
+  height: 34px;
+  background: var(--faint);
+  animation: drip 2.2s ease-in-out infinite
+}
+
+@keyframes drip {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top
+  }
+
+  45% {
+    transform: scaleY(1);
+    transform-origin: top
+  }
+
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom
+  }
+
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom
+  }
+}
+
+/* hero sim HUD */
+.sim-hud {
+  position: absolute;
+  z-index: 2;
+  right: clamp(28px, 4vw, 80px);
+  bottom: 48px;
+  font-family: var(--mono);
+  font-size: 11px;
+  width: 226px;
+  border-left: 2px solid var(--line);
+  padding: 2px 0 2px 16px;
+  opacity: 0;
+  animation: fadeup 1s ease 1s forwards;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .25s
+}
+
+.sim-hud:hover {
+  border-left-color: var(--amber)
+}
+
+.hud-hint {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  font-size: 9.5px;
+  color: var(--faint);
+  letter-spacing: .04em;
+  line-height: 1.6;
+  transition: color .25s
+}
+
+.sim-hud:hover .hud-hint {
+  color: var(--amber)
+}
+
+.hud-modes-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.hud-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  transition: all .2s ease;
+}
+
+.hud-status-light {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1e2326;
+  transition: background .3s ease, box-shadow .3s ease;
+}
+
+.hud-mode-name {
+  color: var(--faint);
+  font-weight: 500;
+  transition: color .3s ease;
+}
+
+#opt-fixed.active .hud-status-light {
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+}
+
+#opt-fixed.active .hud-mode-name {
+  color: var(--text);
+}
+
+#opt-rl.active .hud-status-light {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+#opt-rl.active .hud-mode-name {
+  color: var(--green);
+}
+
+.hud-term {
+  margin-top: 10px;
+  height: 66px;
+  overflow: hidden;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--faint);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end
+}
+
+.hud-term div {
+  white-space: nowrap;
+  overflow: hidden
+}
+
+.hud-term div:last-child {
+  color: var(--amber)
+}
+
+.hud-inject {
+  margin-top: 11px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(217, 161, 59, .55);
+  color: var(--amber);
+  border-radius: 7px;
+  padding: 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  cursor: pointer;
+  transition: background .2s, color .2s
+}
+
+.hud-inject:hover {
+  background: var(--amber);
+  color: #1a1205;
+  border-color: var(--amber)
+}
+
+@media (max-width:1000px) {
+  .sim-hud {
+    display: none
+  }
+}

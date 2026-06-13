@@ -1,0 +1,1663 @@
+/* ════════════════════════════════════════════════════════════
+   TRAFFIX — base.css
+   Shared styles for every screen size. Desktop-only extras live
+   in desktop.css (loaded ≥701px); phone/tablet overrides live in
+   mobile.css (loaded ≤860px). Load order: base → desktop → mobile.
+   ════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #0b0d0e;
+  --bg2: #101315;
+  --text: #e8e6e1;
+  --muted: #8b9096;
+  --faint: #54595e;
+  --line: #1e2326;
+  --amber: #d9a13b;
+  --green: #5fae7e;
+  --red: #b8584f;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  /* fallbacks until hero-sim.js measures the real junction position —
+     prevents a flash of wrong hero padding before deferred JS runs */
+  --cy: 38vh;
+  --road-half: 72px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box
+}
+
+html {
+  scroll-behavior: smooth
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden
+}
+
+#bg-dots {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  pointer-events: none
+}
+
+::selection {
+  background: var(--amber);
+  color: #1a1205
+}
+
+a {
+  color: inherit;
+  text-decoration: none
+}
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 32px
+}
+
+.mono {
+  font-family: var(--mono)
+}
+
+/* ── nav ─────────────────────────────────────────────── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  transition: background .3s
+}
+
+nav.scrolled {
+  background: var(--bg);
+  backdrop-filter: blur(12px)
+}
+
+.nav-inner {
+  width: 100%;
+  padding: 0 clamp(28px, 3.5vw, 68px);
+  height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 36px
+}
+
+.nav-car {
+  position: absolute;
+  bottom: -3.5px;
+  left: -20px;
+  width: 14px;
+  height: 6px;
+  pointer-events: none;
+  z-index: 60;
+  transition: opacity 0.3s ease;
+}
+
+nav.scrolled .nav-car {
+  opacity: 0;
+}
+
+.nav-mobile-btn {
+  display: none;
+}
+
+
+.brand {
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: .16em
+}
+
+.brand i {
+  font-style: normal;
+  color: var(--amber)
+}
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  margin-left: auto;
+  margin-right: 8px
+}
+
+.nav-links a {
+  font-size: 14px;
+  color: var(--muted);
+  transition: color .2s
+}
+
+.nav-links a:hover {
+  color: var(--amber)
+}
+
+.nav-links a.active {
+  color: var(--amber)
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: transform .2s, background .2s, border-color .2s, box-shadow .2s;
+  white-space: nowrap
+}
+
+.btn .ar {
+  transition: transform .25s;
+  display: inline-block
+}
+
+.btn:hover .ar {
+  transform: translateX(4px)
+}
+
+.btn:hover {
+  transform: scale(1.02)
+}
+
+.btn:active {
+  transform: scale(.97)
+}
+
+.btn-solid {
+  background: var(--text);
+  color: #101214
+}
+
+.btn-solid:hover {
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(232, 230, 225, 0.18)
+}
+
+.btn-line {
+  border: 1px solid #2c3236;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(2px)
+}
+
+.btn-line:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 4px 24px rgba(217, 161, 59, 0.08)
+}
+
+nav .btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  border: 1px solid #2c3236;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(2px);
+  transition: background .2s, color .2s, border-color .2s, box-shadow .2s;
+}
+
+nav .btn:hover {
+  background: var(--text);
+  color: #101214;
+  border-color: var(--text);
+  box-shadow: 0 4px 18px rgba(232, 230, 225, 0.15);
+}
+
+.nav-burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 38px;
+  height: 38px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid #2c3236;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav-burger span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--text);
+  border-radius: 1px;
+  transition: transform .25s, opacity .25s;
+}
+
+nav.menu-open .nav-burger span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+nav.menu-open .nav-burger span:nth-child(2) {
+  opacity: 0;
+}
+
+nav.menu-open .nav-burger span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ── hero ────────────────────────────────────────────── */
+body>header {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: hidden
+}
+
+#sim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: pan-y
+}
+
+.hero-content {
+  pointer-events: none
+}
+
+.hero-content a {
+  pointer-events: auto
+}
+
+.hero-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(11, 13, 14, .45), rgba(11, 13, 14, 0) 26%, rgba(11, 13, 14, 0) 72%, var(--bg))
+}
+
+/* phone-hero rules live in mobile.css — the base .hero-content / h1
+   rules below would override them if they sat earlier in the cascade */
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: calc(var(--cy) - var(--road-half) - 59px) clamp(28px, 3.5vw, 68px) 80px;
+  width: 100%;
+  max-width: none
+}
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--amber);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  transform: translateY(-60px);
+}
+
+h1 {
+  font-size: 80px;
+  line-height: 1.06;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  margin-bottom: 24px;
+  max-width: 13ch
+}
+
+h1 .ln {
+  display: block;
+  height: calc(var(--road-half) + 0.4em);
+  line-height: var(--road-half);
+  padding-bottom: 0.4em;
+  margin-bottom: -0.4em;
+  clip-path: inset(0 0 0 0);
+  animation: unclip 1.2s steps(1, end) forwards;
+}
+
+@keyframes unclip {
+  0% {
+    clip-path: inset(0 0 0 0);
+  }
+
+  99% {
+    clip-path: inset(0 0 0 0);
+  }
+
+  100% {
+    clip-path: inset(-50px -50px -50px -50px);
+  }
+}
+
+h1 .ln:nth-child(1) {
+  transform: translateY(-20px);
+}
+
+h1 .ln:nth-child(2) {
+  transform: translateY(-10px);
+}
+
+@property --text-tint-2 {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #a5abb6;
+}
+
+h1 .ln span {
+  display: block;
+  height: calc(var(--road-half) + 0.4em);
+  transform: translateY(110%);
+  animation: rise .9s cubic-bezier(.16, 1, .3, 1) forwards;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: --text-tint-2 1.0s ease;
+}
+
+h1 .ln:nth-child(1) span {
+  background-image: linear-gradient(180deg, #ffffff 0%, #a5abb6 100%);
+}
+
+h1 .ln:nth-child(2) span {
+  animation-delay: .12s;
+  background-image: linear-gradient(180deg, #ffffff 0%, var(--text-tint-2, #a5abb6) 100%);
+}
+
+@keyframes rise {
+  to {
+    transform: translateY(0)
+  }
+}
+
+.hero-sub {
+  max-width: 520px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.8;
+  margin-top: 60px;
+  margin-bottom: 72px;
+  opacity: 0;
+  animation: fadeup .8s ease .45s forwards;
+  position: relative;
+  top: 0;
+}
+
+.hero-sub b {
+  color: var(--text);
+  font-weight: 600
+}
+
+.hero-cta {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeup .8s ease .6s forwards
+}
+
+@keyframes fadeup {
+  from {
+    opacity: 0;
+    transform: translateY(18px)
+  }
+
+  to {
+    opacity: 1;
+    transform: none
+  }
+}
+
+/* ── scroll reveal ───────────────────────────────────── */
+.rv {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity .8s ease, transform .8s cubic-bezier(.16, 1, .3, 1)
+}
+
+.rv.in {
+  opacity: 1;
+  transform: none
+}
+
+.gsap-active .rv {
+  transition: none !important;
+}
+
+.rv.d1 {
+  transition-delay: .1s
+}
+
+.rv.d2 {
+  transition-delay: .2s
+}
+
+.rv.d3 {
+  transition-delay: .3s
+}
+
+/* ── sections ────────────────────────────────────────── */
+section {
+  padding: 110px 0;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 68px
+}
+
+.sec-tag {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--amber);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  margin-bottom: 18px
+}
+
+h2 {
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  max-width: 18ch;
+  margin-bottom: 18px
+}
+
+.sec-sub {
+  color: var(--muted);
+  max-width: 560px;
+  font-size: 17px
+}
+
+/* stats */
+#results .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 56px
+}
+
+.stat {
+  background: var(--bg);
+  padding: 42px 36px;
+  position: relative;
+  overflow: hidden;
+  transition: background .3s
+}
+
+.stat:hover {
+  background: #0e1113
+}
+
+.stat::after,
+.feat::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .35s;
+  pointer-events: none;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(217, 161, 59, .07), transparent 65%)
+}
+
+.stat:hover::after,
+.feat:hover::after {
+  opacity: 1
+}
+
+.stat .num {
+  font-size: clamp(42px, 5vw, 64px);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1;
+  color: var(--amber)
+}
+
+.stat .num em {
+  font-style: normal
+}
+
+.stat .lbl {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 15px
+}
+
+.stat .lbl b {
+  color: var(--text);
+  font-weight: 600
+}
+
+.note {
+  margin-top: 22px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--faint)
+}
+
+/* results chart */
+.rchart {
+  margin-top: 56px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg2);
+  padding: 36px 40px
+}
+
+.rchart h4 {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 26px
+}
+
+.rchart h4 span {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--faint);
+  font-weight: 400;
+  letter-spacing: .06em
+}
+
+.cbar {
+  display: grid;
+  grid-template-columns: 110px 1fr 92px;
+  align-items: center;
+  gap: 18px;
+  padding: 9px 0
+}
+
+.cbar .clbl {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: right
+}
+
+.cbar .ctrack {
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .03);
+  overflow: hidden
+}
+
+.cbar .cfill {
+  height: 100%;
+  width: 0;
+  border-radius: 5px;
+  background: #3a4046;
+  transition: width 1.3s cubic-bezier(.16, 1, .3, 1)
+}
+
+.cbar.hl .cfill {
+  background: var(--amber)
+}
+
+.cbar .cval {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted)
+}
+
+.cbar.hl .cval {
+  color: var(--amber);
+  font-weight: 500
+}
+
+.cbar.hl .clbl {
+  color: var(--text)
+}
+
+.cbar .cfill {
+  transition: width 1.3s cubic-bezier(.16, 1, .3, 1), filter .25s
+}
+
+.cbar:hover .cfill {
+  filter: brightness(1.25)
+}
+
+.cbar:hover .clbl {
+  color: var(--text)
+}
+
+/* how it works */
+.steps {
+  margin-top: 60px;
+  border-top: 1px solid var(--line)
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 90px 1fr 1.2fr;
+  gap: 32px;
+  padding: 44px 0;
+  border-bottom: 1px solid var(--line);
+  align-items: start
+}
+
+.step {
+  transition: background .3s
+}
+
+.step:hover {
+  background: linear-gradient(90deg, rgba(217, 161, 59, .03), transparent 60%)
+}
+
+.step .no {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--faint);
+  padding-top: 6px;
+  transition: color .3s
+}
+
+.step:hover .no {
+  color: var(--amber)
+}
+
+.step h3 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -.01em
+}
+
+.step p {
+  color: var(--muted);
+  font-size: 15.5px
+}
+
+.step .tagline {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--amber);
+  margin-top: 10px
+}
+
+/* demo — auto-playing walkthrough of the comparison UI */
+.tour {
+  margin-top: 56px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg2);
+  overflow: hidden;
+  position: relative
+}
+
+.tour-chrome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap
+}
+
+.tour-chrome i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2c3236
+}
+
+.tour-chrome>span {
+  margin-left: 10px;
+  font-size: 11.5px;
+  color: var(--faint)
+}
+
+.tour-steps {
+  margin-left: auto;
+  display: flex;
+  gap: 8px
+}
+
+.ts {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--faint);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  transition: all .35s
+}
+
+.ts.act {
+  color: var(--amber);
+  border-color: var(--amber)
+}
+
+.tour-body {
+  display: grid;
+  grid-template-columns: 36px 206px 1fr
+}
+
+/* icon rail — mirrors the app's left strip */
+.t-rail {
+  border-right: 1px solid var(--line);
+  background: #0d0f11;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0
+}
+
+.t-logo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px
+}
+
+.t-logo i {
+  font-style: normal;
+  color: var(--amber)
+}
+
+.t-ric {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: var(--faint)
+}
+
+.t-ric.act {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  color: var(--text)
+}
+
+.t-side {
+  border-right: 1px solid var(--line);
+  padding: 10px;
+  background: var(--bg)
+}
+
+.t-side h5 {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  color: var(--amber);
+  font-weight: 500;
+  margin-bottom: 8px
+}
+
+.t-kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 7px
+}
+
+.t-kv label {
+  font-size: 10px;
+  color: var(--muted)
+}
+
+.t-kv span {
+  font-size: 9.5px;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 2px 8px;
+  background: var(--bg2)
+}
+
+/* approach card — same look as the app's scenario builder */
+.t-app {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 9px;
+  margin-bottom: 8px
+}
+
+.t-app header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 7px
+}
+
+.t-app header b {
+  font-size: 11px;
+  font-weight: 600
+}
+
+.t-app header span {
+  font-size: 9.5px;
+  color: var(--faint)
+}
+
+.t-row {
+  display: grid;
+  grid-template-columns: 46px 1fr 52px;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 7px
+}
+
+.t-row:last-child {
+  margin-bottom: 2px
+}
+
+.t-row label {
+  font-size: 10.5px;
+  color: var(--muted)
+}
+
+.t-row output {
+  font-size: 9.5px;
+  color: var(--text);
+  text-align: right;
+  white-space: nowrap
+}
+
+.t-slider {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden
+}
+
+.t-slider i {
+  display: block;
+  height: 100%;
+  width: 18%;
+  background: var(--faint);
+  border-radius: 2px;
+  transition: width 1s cubic-bezier(.16, 1, .3, 1), background .4s
+}
+
+.tour[data-step="1"] .t-slider i {
+  background: var(--amber)
+}
+
+.t-presets {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0;
+  flex-wrap: wrap
+}
+
+.tp {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  transition: all .3s
+}
+
+.tp.on {
+  color: var(--amber);
+  border-color: var(--amber)
+}
+
+.t-deploy {
+  font-size: 11px;
+  text-align: center;
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--amber);
+  color: #1a1205;
+  font-weight: 600
+}
+
+.t-main {
+  display: flex;
+  flex-direction: column
+}
+
+.t-vps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1
+}
+
+.t-vp {
+  position: relative;
+  min-height: 120px;
+  background: var(--bg);
+  overflow: hidden
+}
+
+.t-vp+.t-vp {
+  border-left: 1px solid var(--line)
+}
+
+.t-tag {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: var(--muted);
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  padding: 4px 9px;
+  background: rgba(11, 13, 14, .8)
+}
+
+.t-tag::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--faint);
+  margin-right: 7px;
+  vertical-align: .5px
+}
+
+.t-tag.t-amber {
+  color: var(--amber);
+  border-color: rgba(217, 161, 59, .45)
+}
+
+.t-tag.t-amber::before {
+  background: var(--amber)
+}
+
+/* mini junction — same dark crossing as the real render */
+.t-road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 16px;
+  transform: translateY(-50%);
+  background: #151a21
+}
+
+.t-road.v {
+  left: 50%;
+  right: auto;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  height: auto;
+  transform: translateX(-50%)
+}
+
+/* cars are tiny colour-coded dots, like the SUMO view:
+   green = rolling, red = held at the line */
+.t-car {
+  position: absolute;
+  border-radius: 1.5px;
+  background: #5fae7e;
+  opacity: 0;
+  /* hidden until the run starts */
+  animation-play-state: paused !important
+}
+
+.t-car.h {
+  width: 6px;
+  height: 3px;
+  left: -5%;
+  top: calc(50% + 2px)
+}
+
+.t-car.v {
+  width: 3px;
+  height: 6px;
+  top: -8%;
+  left: calc(50% - 5px)
+}
+
+/* fixed side queues three-deep at the light; RL side flows */
+.t-car.sg {
+  animation: tStopGoH 6.5s linear infinite
+}
+
+.t-car.sg2 {
+  animation: tStopGoH2 6.5s linear infinite
+}
+
+.t-car.sg3 {
+  animation: tStopGoH3 6.5s linear infinite
+}
+
+.t-car.fl {
+  animation: tFlowH 4.5s linear infinite
+}
+
+.t-car.dn {
+  animation: tFlowV 5.5s linear infinite
+}
+
+.tour.playing .t-car {
+  opacity: 1;
+  animation-play-state: running !important
+}
+
+@keyframes tStopGoH {
+  0% {
+    left: -4%;
+    background: #5fae7e
+  }
+
+  26% {
+    left: 39%;
+    background: #5fae7e
+  }
+
+  31% {
+    left: 41%;
+    background: #e0564a
+  }
+
+  62% {
+    left: 41%;
+    background: #e0564a
+  }
+
+  68% {
+    left: 45%;
+    background: #5fae7e
+  }
+
+  100% {
+    left: 106%;
+    background: #5fae7e
+  }
+}
+
+@keyframes tStopGoH2 {
+  0% {
+    left: -4%;
+    background: #5fae7e
+  }
+
+  28% {
+    left: 34%;
+    background: #5fae7e
+  }
+
+  34% {
+    left: 36.5%;
+    background: #e0564a
+  }
+
+  64% {
+    left: 36.5%;
+    background: #e0564a
+  }
+
+  71% {
+    left: 42%;
+    background: #5fae7e
+  }
+
+  100% {
+    left: 106%;
+    background: #5fae7e
+  }
+}
+
+@keyframes tStopGoH3 {
+  0% {
+    left: -4%;
+    background: #5fae7e
+  }
+
+  30% {
+    left: 29%;
+    background: #5fae7e
+  }
+
+  37% {
+    left: 32%;
+    background: #e0564a
+  }
+
+  66% {
+    left: 32%;
+    background: #e0564a
+  }
+
+  74% {
+    left: 39%;
+    background: #5fae7e
+  }
+
+  100% {
+    left: 106%;
+    background: #5fae7e
+  }
+}
+
+@keyframes tFlowH {
+  0% {
+    left: -4%;
+    background: #5fae7e
+  }
+
+  100% {
+    left: 106%;
+    background: #5fae7e
+  }
+}
+
+@keyframes tFlowV {
+  0% {
+    top: -8%;
+    background: #5fae7e
+  }
+
+  100% {
+    top: 106%;
+    background: #5fae7e
+  }
+}
+
+/* mini signal gates on the crossing */
+.t-gate {
+  position: absolute;
+  z-index: 1;
+  border-radius: 1px
+}
+
+.t-gate.h {
+  left: calc(50% - 11px);
+  top: calc(50% - 8px);
+  width: 2px;
+  height: 16px
+}
+
+.t-gate.v {
+  top: calc(50% - 11px);
+  left: calc(50% - 8px);
+  width: 16px;
+  height: 2px
+}
+
+.t-gate.g {
+  background: #5fae7e;
+  box-shadow: 0 0 5px rgba(95, 174, 126, .8)
+}
+
+.t-gate.r {
+  background: #e0564a;
+  box-shadow: 0 0 5px rgba(224, 86, 74, .8)
+}
+
+/* mini topbar — mirrors the real app's transport row */
+.t-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap
+}
+
+.t-loc b {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+  line-height: 1.25
+}
+
+.t-loc small {
+  font-size: 9.5px;
+  color: var(--faint)
+}
+
+.t-chip {
+  font-size: 9px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--bg2);
+  white-space: nowrap
+}
+
+.t-chip b {
+  color: var(--amber);
+  font-weight: 500
+}
+
+.t-transport {
+  display: flex;
+  align-items: center;
+  gap: 8px
+}
+
+.t-tbtn {
+  width: 27px;
+  height: 27px;
+  border-radius: 7px;
+  border: 1px solid var(--line2);
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: var(--text);
+  transition: all .3s
+}
+
+#t-play.on {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #1a1205
+}
+
+.t-time {
+  font-size: 10px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 5px 9px
+}
+
+.t-spd {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden
+}
+
+.t-spd b {
+  font-weight: 400;
+  font-size: 9.5px;
+  padding: 5px 7px;
+  color: var(--faint)
+}
+
+.t-spd b.act {
+  background: var(--bg2);
+  color: var(--text)
+}
+
+.t-phase {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  z-index: 2;
+  font-size: 9.5px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 8px;
+  background: rgba(11, 13, 14, .8)
+}
+
+.t-dock {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.35fr .9fr .9fr;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding: 14px 12px 10px;
+  opacity: .45;
+  transition: opacity .6s
+}
+
+.t-anal {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8.5px;
+  letter-spacing: .12em;
+  color: var(--muted);
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  padding: 3px 12px;
+  background: var(--bg2)
+}
+
+.tour.analytics .t-dock {
+  opacity: 1
+}
+
+.t-dock table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5px;
+  background: #101315;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden
+}
+
+.t-dock th,
+.t-dock td {
+  text-align: right;
+  padding: 5px 8px;
+  color: var(--muted);
+  font-weight: 400
+}
+
+.t-dock th:first-child,
+.t-dock td:first-child {
+  text-align: left;
+  color: var(--text)
+}
+
+.t-dock thead th {
+  color: var(--faint);
+  border-bottom: 1px solid var(--line);
+  font-size: 8.5px;
+  letter-spacing: .07em;
+  text-transform: uppercase
+}
+
+.t-delta td {
+  color: #3ecf8e;
+  border-top: 1px solid var(--line)
+}
+
+.t-delta td:first-child {
+  color: #3ecf8e
+}
+
+.t-chartcard {
+  background: #101315;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column
+}
+
+.t-chead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 8px;
+  letter-spacing: .08em;
+  color: var(--faint);
+  margin-bottom: 6px
+}
+
+.t-leg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap
+}
+
+.t-leg i {
+  width: 9px;
+  height: 2px;
+  border-radius: 1px;
+  display: inline-block
+}
+
+.t-leg .lf {
+  background: #8b9096
+}
+
+.t-leg .lr {
+  background: var(--amber)
+}
+
+.t-chart {
+  width: 100%;
+  flex: 1;
+  min-height: 42px;
+  display: block
+}
+
+.t-chart path {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100
+}
+
+.tc-fx {
+  stroke: #8b9096
+}
+
+.tc-rl {
+  stroke: var(--amber)
+}
+
+.tour.analytics .t-chart path {
+  transition: stroke-dashoffset 1.8s ease;
+  stroke-dashoffset: 0
+}
+
+.t-cursor {
+  position: absolute;
+  z-index: 5;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--amber);
+  background: rgba(217, 161, 59, .18);
+  left: 40%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: left .9s cubic-bezier(.4, 0, .2, 1), top .9s cubic-bezier(.4, 0, .2, 1)
+}
+
+.t-cursor.click {
+  animation: tClick .5s ease
+}
+
+@keyframes tClick {
+  30% {
+    transform: translate(-50%, -50%) scale(.55)
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1)
+  }
+}
+
+.demo-foot {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  flex-wrap: wrap
+}
+
+/* live demo fits a single viewport: tag + heading + full tour + button */
+#demo {
+  padding: 32px 0
+}
+
+#demo .sec-tag {
+  margin-bottom: 10px
+}
+
+#demo h2 {
+  max-width: none;
+  margin-bottom: 0
+}
+
+#demo .tour {
+  margin-top: 18px
+}
+
+/* feature grid */
+#built .feat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 56px
+}
+
+.feat {
+  background: var(--bg);
+  padding: 36px;
+  position: relative;
+  overflow: hidden;
+  transition: background .3s
+}
+
+.feat:hover {
+  background: #0e1113
+}
+
+.feat h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 11px
+}
+
+.feat h3::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+  transition: transform .3s
+}
+
+.feat:hover h3::before {
+  transform: scale(1.6)
+}
+
+.feat p {
+  color: var(--muted);
+  font-size: 14.5px
+}
+
+/* tech strip */
+.tech-strip {
+  margin-top: 64px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px
+}
+
+.tech-strip span {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 16px;
+  transition: color .25s, border-color .25s, transform .25s;
+  cursor: default
+}
+
+.tech-strip span:hover {
+  color: var(--amber);
+  border-color: var(--amber);
+  transform: translateY(-2px)
+}
+
+/* final cta */
+#cta {
+  text-align: center;
+  padding: 130px 0
+}
+
+#cta h2 {
+  margin: 0 auto 18px
+}
+
+#cta .sec-sub {
+  margin: 0 auto 40px
+}
+
+/* footer */
+footer {
+  border-top: 1px solid var(--line);
+  padding: 34px 0
+}
+
+.foot-inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap
+}
+
+.foot-inner .brand {
+  font-size: 14px
+}
+
+.foot-inner p {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--faint);
+  margin-left: auto
+}
+
+/* ── low-power devices (set by the inline detector in index.html) ──
+   backdrop-filter blur is a per-frame GPU cost on phone GPUs — even a
+   phone showing the DESKTOP layout gets these cheap paths. The tinted
+   gradients stay, so the look barely changes; the lag does. */
+.low-power nav.scrolled {
+  backdrop-filter: none
+}
+
+.low-power .btn-line,
+.low-power nav .btn {
+  backdrop-filter: none
+}
+
+.low-power .hero-overlay-left {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none
+}
+
+@media (prefers-reduced-motion:reduce) {
+  * {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important
+  }
+
+  .rv {
+    opacity: 1;
+    transform: none
+  }
+
+  h1 .ln span {
+    transform: none;
+    animation: none
+  }
+
+  .hero-sub,
+  .hero-cta,
+  .scroll-hint {
+    opacity: 1;
+    animation: none
+  }
+}

@@ -1,0 +1,681 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprehensive mixed-demand training file v2.
+     21 blocks covering HIGH / MEDIUM-HIGH / MEDIUM / LOW / SPARSE demand.
+     All demand tiers, cross-pairs, asymmetric patterns, BeST moderate fingerprint,
+     and ramping transitions. Max flow rate capped at ~700 vph.
+     Total duration: ~7800s. Set max_step = 7800. -->
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+
+  <vType id="DefaultVehicle"
+         length="5.00" minGap="2.00" maxSpeed="50.00"
+         accel="1.50" decel="4.50" sigma="0.50" tau="1.00"/>
+
+  <!-- Route definitions -->
+  <route id="A_OUT_A" edges="429488376#0 34412631"/>
+  <route id="A_OUT_B" edges="429488376#0 4453041"/>
+  <route id="A_OUT_D" edges="429488376#0 429488374"/>
+
+  <route id="B_OUT_A" edges="429488375#0 34412631"/>
+  <route id="B_OUT_B" edges="429488375#0 4453041"/>
+  <route id="B_OUT_C" edges="429488375#0 34412633"/>
+
+  <route id="C_OUT_B" edges="328440060#1 4453041"/>
+  <route id="C_OUT_C" edges="328440060#1 34412633"/>
+  <route id="C_OUT_D" edges="328440060#1 429488374"/>
+
+  <route id="D_OUT_A" edges="338690994#0 34412631"/>
+  <route id="D_OUT_C" edges="338690994#0 34412633"/>
+  <route id="D_OUT_D" edges="338690994#0 429488374"/>
+
+  <!-- ================================================================= -->
+  <!-- BLOCK 1: A-H B-H C-H D-H                                          -->
+  <!-- WITH 2 SUB-PARTS THAT HAVE SOME WHAT DIFF HIGH VALUE              -->
+  <!-- ================================================================= -->
+
+  <!--HHHH Sub-part  (0–200) -->
+  <!-- A = high  -->
+  <flow id="A_L-1" begin="0"   end="200" route="A_OUT_B" vehsPerHour="55"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="A_S-1" begin="0"   end="200" route="A_OUT_A" vehsPerHour="600" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="A_R-1" begin="0"   end="200" route="A_OUT_D" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+   <!-- B = moderate  -->
+  <flow id="B_L-1" begin="0"   end="200" route="B_OUT_C" vehsPerHour="30"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="B_S-1" begin="0"   end="200" route="B_OUT_B" vehsPerHour="260" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="B_R-1" begin="0"   end="200" route="B_OUT_A" vehsPerHour="30"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+  <!-- C = high -->
+  <flow id="C_L-1" begin="0"   end="200" route="C_OUT_D" vehsPerHour="60"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="C_S-1" begin="0"   end="200" route="C_OUT_C" vehsPerHour="580" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="C_R-1" begin="0"   end="200" route="C_OUT_B" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  
+  <!-- D = moderate -->
+  <flow id="D_L-1" begin="0"   end="200" route="D_OUT_A" vehsPerHour="25"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="D_S-1" begin="0"   end="200" route="D_OUT_D" vehsPerHour="260" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="D_R-1" begin="0"   end="200" route="D_OUT_C" vehsPerHour="25"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  
+  <!--HHHH Sub-part  (200–400) -->
+  <!-- A = high  -->
+  <flow id="subA_L-1" begin="200"   end="400" route="A_OUT_B" vehsPerHour="55"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subA_S-1" begin="200"   end="400" route="A_OUT_A" vehsPerHour="670" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subA_R-1" begin="200"   end="400" route="A_OUT_D" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+   <!-- B = moderate  -->
+  <flow id="subB_L-1" begin="200"   end="400" route="B_OUT_C" vehsPerHour="35"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subB_S-1" begin="200"   end="400" route="B_OUT_B" vehsPerHour="290" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subB_R-1" begin="200"   end="400" route="B_OUT_A" vehsPerHour="35"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+  <!-- C = high -->
+  <flow id="subC_L-1" begin="200"   end="400" route="C_OUT_D" vehsPerHour="55"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subC_S-1" begin="200"   end="400" route="C_OUT_C" vehsPerHour="640" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subC_R-1" begin="200"   end="400" route="C_OUT_B" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  
+  <!-- D = moderate -->
+  <flow id="subD_L-1" begin="200"   end="400" route="D_OUT_A" vehsPerHour="30"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subD_S-1" begin="200"   end="400" route="D_OUT_D" vehsPerHour="270" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subD_R-1" begin="200"   end="400" route="D_OUT_C" vehsPerHour="30"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+
+  <!-- ================================================================= -->
+  <!-- BLOCK 2: A-H B-L C-L D-L                                          -->
+  <!-- WITH 2 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+  <!-- ================================================================= -->
+
+  <!--BLOCK 2 Sub-part  (400-600) -->
+  <!-- A = high  -->
+  <flow id="A_L-3" begin="400"   end="600" route="A_OUT_B" vehsPerHour="55"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="A_S-3" begin="400"   end="600" route="A_OUT_A" vehsPerHour="520" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="A_R-3" begin="400"   end="600" route="A_OUT_D" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+   <!-- B = LOW  -->
+  <flow id="B_L-3" begin="400"   end="600" route="B_OUT_C" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="B_S-3" begin="400"   end="600" route="B_OUT_B" vehsPerHour="160" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="B_R-3" begin="400"   end="600" route="B_OUT_A" vehsPerHour="40"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+  <!-- C = LOW -->
+  <flow id="C_L-3" begin="400"   end="600" route="C_OUT_D" vehsPerHour="60"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="C_S-3" begin="400"   end="600" route="C_OUT_C" vehsPerHour="180" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="C_R-3" begin="400"   end="600" route="C_OUT_B" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  
+  <!-- D = LOW -->
+  <flow id="D_L-3" begin="400"   end="600" route="D_OUT_A" vehsPerHour="40"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="D_S-3" begin="400"   end="600" route="D_OUT_D" vehsPerHour="150" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="D_R-3" begin="400"   end="600" route="D_OUT_C" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  
+  <!--BLOCK 2 Sub-part  (400–600) -->
+  <!-- A = high  -->
+  <flow id="subA_L-4" begin="600"   end="800" route="A_OUT_B" vehsPerHour="55"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subA_S-4" begin="600"   end="800" route="A_OUT_A" vehsPerHour="570" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subA_R-4" begin="600"   end="800" route="A_OUT_D" vehsPerHour="50"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+   <!-- B = LOW  -->
+  <flow id="subB_L-4" begin="600"   end="800" route="B_OUT_C" vehsPerHour="300"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subB_S-4" begin="600"   end="800" route="B_OUT_B" vehsPerHour="80" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subB_R-4" begin="600"   end="800" route="B_OUT_A" vehsPerHour="30"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+  <!-- C = LOW -->
+  <flow id="subC_L-4" begin="600"   end="800" route="C_OUT_D" vehsPerHour="25"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subC_S-4" begin="600"   end="800" route="C_OUT_C" vehsPerHour="80" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subC_R-4" begin="600"   end="800" route="C_OUT_B" vehsPerHour="30"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  
+  <!-- D = LOW -->
+  <flow id="subD_L-4" begin="600"   end="800" route="D_OUT_A" vehsPerHour="30"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subD_S-4" begin="600"   end="800" route="D_OUT_D" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+  <flow id="subD_R-4" begin="600"   end="800" route="D_OUT_C" vehsPerHour="25"  type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+
+
+<!-- ================================================================= -->
+<!-- BLOCK 3 (800-1200) HLHL                                            -->
+<!-- WITH 3 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+<!-- ================================================================= -->
+
+<!--BLOCK 3 Sub-part (800–1000) -->
+<flow id="A_L-5" begin="800" end="1000" route="A_OUT_B" vehsPerHour="51" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-5" begin="800" end="1000" route="A_OUT_A" vehsPerHour="655" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-5" begin="800" end="1000" route="A_OUT_D" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-5" begin="800" end="1000" route="B_OUT_C" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-5" begin="800" end="1000" route="B_OUT_B" vehsPerHour="144" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-5" begin="800" end="1000" route="B_OUT_A" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-5" begin="800" end="1000" route="C_OUT_D" vehsPerHour="63" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-5" begin="800" end="1000" route="C_OUT_C" vehsPerHour="559" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-5" begin="800" end="1000" route="C_OUT_B" vehsPerHour="59" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-5" begin="800" end="1000" route="D_OUT_A" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-5" begin="800" end="1000" route="D_OUT_D" vehsPerHour="150" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-5" begin="800" end="1000" route="D_OUT_C" vehsPerHour="38" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 3 Sub-part (1000–1200) -->
+<flow id="A_L-6" begin="1000" end="1200" route="A_OUT_B" vehsPerHour="51" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-6" begin="1000" end="1200" route="A_OUT_A" vehsPerHour="600" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-6" begin="1000" end="1200" route="A_OUT_D" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-6" begin="1000" end="1200" route="B_OUT_C" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-6" begin="1000" end="1200" route="B_OUT_B" vehsPerHour="144" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-6" begin="1000" end="1200" route="B_OUT_A" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-6" begin="1000" end="1200" route="C_OUT_D" vehsPerHour="63" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-6" begin="1000" end="1200" route="C_OUT_C" vehsPerHour="660" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-6" begin="1000" end="1200" route="C_OUT_B" vehsPerHour="59" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-6" begin="1000" end="1200" route="D_OUT_A" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-6" begin="1000" end="1200" route="D_OUT_D" vehsPerHour="150" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-6" begin="1000" end="1200" route="D_OUT_C" vehsPerHour="38" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 4 (1200-1600) HMMM                                            -->
+<!-- WITH 4 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+<!-- ================================================================= -->
+
+<!--BLOCK 4 Sub-part (1200–1400) -->
+<flow id="A_L-8" begin="1200" end="1400" route="A_OUT_B" vehsPerHour="64" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-8" begin="1200" end="1400" route="A_OUT_A" vehsPerHour="714" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-8" begin="1200" end="1400" route="A_OUT_D" vehsPerHour="79" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-8" begin="1200" end="1400" route="B_OUT_C" vehsPerHour="39" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-8" begin="1200" end="1400" route="B_OUT_B" vehsPerHour="276" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-8" begin="1200" end="1400" route="B_OUT_A" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-8" begin="1200" end="1400" route="C_OUT_D" vehsPerHour="38" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-8" begin="1200" end="1400" route="C_OUT_C" vehsPerHour="246" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-8" begin="1200" end="1400" route="C_OUT_B" vehsPerHour="43" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-8" begin="1200" end="1400" route="D_OUT_A" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-8" begin="1200" end="1400" route="D_OUT_D" vehsPerHour="217" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-8" begin="1200" end="1400" route="D_OUT_C" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 4 Sub-part (1400–1600) -->
+<flow id="A_L-9" begin="1400" end="1600" route="A_OUT_B" vehsPerHour="64" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-9" begin="1400" end="1600" route="A_OUT_A" vehsPerHour="714" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-9" begin="1400" end="1600" route="A_OUT_D" vehsPerHour="79" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-9" begin="1400" end="1600" route="B_OUT_C" vehsPerHour="39" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-9" begin="1400" end="1600" route="B_OUT_B" vehsPerHour="376" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-9" begin="1400" end="1600" route="B_OUT_A" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-9" begin="1400" end="1600" route="C_OUT_D" vehsPerHour="38" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-9" begin="1400" end="1600" route="C_OUT_C" vehsPerHour="346" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-9" begin="1400" end="1600" route="C_OUT_B" vehsPerHour="43" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-9" begin="1400" end="1600" route="D_OUT_A" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-9" begin="1400" end="1600" route="D_OUT_D" vehsPerHour="217" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-9" begin="1400" end="1600" route="D_OUT_C" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 5 (1600-2000) HMHM                                            -->
+<!-- WITH 5 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+<!-- ================================================================= -->
+
+<!--BLOCK 5 Sub-part (1600–1800) -->
+<flow id="A_L-11" begin="1600" end="1800" route="A_OUT_B" vehsPerHour="52" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-11" begin="1600" end="1800" route="A_OUT_A" vehsPerHour="600" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-11" begin="1600" end="1800" route="A_OUT_D" vehsPerHour="59" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-11" begin="1600" end="1800" route="B_OUT_C" vehsPerHour="48" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-11" begin="1600" end="1800" route="B_OUT_B" vehsPerHour="284" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-11" begin="1600" end="1800" route="B_OUT_A" vehsPerHour="52" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-11" begin="1600" end="1800" route="C_OUT_D" vehsPerHour="50" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-11" begin="1600" end="1800" route="C_OUT_C" vehsPerHour="658" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-11" begin="1600" end="1800" route="C_OUT_B" vehsPerHour="77" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-11" begin="1600" end="1800" route="D_OUT_A" vehsPerHour="49" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-11" begin="1600" end="1800" route="D_OUT_D" vehsPerHour="253" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-11" begin="1600" end="1800" route="D_OUT_C" vehsPerHour="51" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 5 Sub-part (1800–2000) -->
+<flow id="A_L-12" begin="1800" end="2000" route="A_OUT_B" vehsPerHour="52" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-12" begin="1800" end="2000" route="A_OUT_A" vehsPerHour="660" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-12" begin="1800" end="2000" route="A_OUT_D" vehsPerHour="59" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-12" begin="1800" end="2000" route="B_OUT_C" vehsPerHour="48" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-12" begin="1800" end="2000" route="B_OUT_B" vehsPerHour="284" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-12" begin="1800" end="2000" route="B_OUT_A" vehsPerHour="52" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-12" begin="1800" end="2000" route="C_OUT_D" vehsPerHour="50" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-12" begin="1800" end="2000" route="C_OUT_C" vehsPerHour="658" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-12" begin="1800" end="2000" route="C_OUT_B" vehsPerHour="77" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-12" begin="1800" end="2000" route="D_OUT_A" vehsPerHour="49" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-12" begin="1800" end="2000" route="D_OUT_D" vehsPerHour="233" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-12" begin="1800" end="2000" route="D_OUT_C" vehsPerHour="51" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 6 (2000-2400) LLHL                                            -->
+<!-- WITH 6 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+<!-- ================================================================= -->
+
+<!--BLOCK 6 Sub-part (2000–2200) -->
+<flow id="A_L-14" begin="2000" end="2200" route="A_OUT_B" vehsPerHour="39" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-14" begin="2000" end="2200" route="A_OUT_A" vehsPerHour="84" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-14" begin="2000" end="2200" route="A_OUT_D" vehsPerHour="24" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-14" begin="2000" end="2200" route="B_OUT_C" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-14" begin="2000" end="2200" route="B_OUT_B" vehsPerHour="84" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-14" begin="2000" end="2200" route="B_OUT_A" vehsPerHour="39" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-14" begin="2000" end="2200" route="C_OUT_D" vehsPerHour="77" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-14" begin="2000" end="2200" route="C_OUT_C" vehsPerHour="677" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-14" begin="2000" end="2200" route="C_OUT_B" vehsPerHour="56" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-14" begin="2000" end="2200" route="D_OUT_A" vehsPerHour="20" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-14" begin="2000" end="2200" route="D_OUT_D" vehsPerHour="127" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-14" begin="2000" end="2200" route="D_OUT_C" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 6 Sub-part (2200–2400) -->
+<flow id="A_L-15" begin="2200" end="2400" route="A_OUT_B" vehsPerHour="39" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-15" begin="2200" end="2400" route="A_OUT_A" vehsPerHour="124" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-15" begin="2200" end="2400" route="A_OUT_D" vehsPerHour="24" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-15" begin="2200" end="2400" route="B_OUT_C" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-15" begin="2200" end="2400" route="B_OUT_B" vehsPerHour="84" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-15" begin="2200" end="2400" route="B_OUT_A" vehsPerHour="39" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-15" begin="2200" end="2400" route="C_OUT_D" vehsPerHour="77" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-15" begin="2200" end="2400" route="C_OUT_C" vehsPerHour="607" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-15" begin="2200" end="2400" route="C_OUT_B" vehsPerHour="56" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-15" begin="2200" end="2400" route="D_OUT_A" vehsPerHour="20" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-15" begin="2200" end="2400" route="D_OUT_D" vehsPerHour="80" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-15" begin="2200" end="2400" route="D_OUT_C" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 7 (2400-2800) MMHM                                            -->
+<!-- WITH 7 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+<!-- ================================================================= -->
+
+<!--BLOCK 7 Sub-part (2400–2600) -->
+<flow id="A_L-17" begin="2400" end="2600" route="A_OUT_B" vehsPerHour="53" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-17" begin="2400" end="2600" route="A_OUT_A" vehsPerHour="259" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-17" begin="2400" end="2600" route="A_OUT_D" vehsPerHour="47" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-17" begin="2400" end="2600" route="B_OUT_C" vehsPerHour="58" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-17" begin="2400" end="2600" route="B_OUT_B" vehsPerHour="340" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-17" begin="2400" end="2600" route="B_OUT_A" vehsPerHour="60" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-17" begin="2400" end="2600" route="C_OUT_D" vehsPerHour="75" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-17" begin="2400" end="2600" route="C_OUT_C" vehsPerHour="732" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-17" begin="2400" end="2600" route="C_OUT_B" vehsPerHour="63" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-17" begin="2400" end="2600" route="D_OUT_A" vehsPerHour="55" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-17" begin="2400" end="2600" route="D_OUT_D" vehsPerHour="241" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-17" begin="2400" end="2600" route="D_OUT_C" vehsPerHour="49" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 7 Sub-part (2600–2800) -->
+<flow id="A_L-18" begin="2600" end="2800" route="A_OUT_B" vehsPerHour="53" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-18" begin="2600" end="2800" route="A_OUT_A" vehsPerHour="299" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-18" begin="2600" end="2800" route="A_OUT_D" vehsPerHour="47" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-18" begin="2600" end="2800" route="B_OUT_C" vehsPerHour="58" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-18" begin="2600" end="2800" route="B_OUT_B" vehsPerHour="340" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-18" begin="2600" end="2800" route="B_OUT_A" vehsPerHour="60" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-18" begin="2600" end="2800" route="C_OUT_D" vehsPerHour="75" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-18" begin="2600" end="2800" route="C_OUT_C" vehsPerHour="732" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-18" begin="2600" end="2800" route="C_OUT_B" vehsPerHour="63" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-18" begin="2600" end="2800" route="D_OUT_A" vehsPerHour="55" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-18" begin="2600" end="2800" route="D_OUT_D" vehsPerHour="341" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-18" begin="2600" end="2800" route="D_OUT_C" vehsPerHour="49" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!--  =================================================================  -->
+<!--  BLOCK 8 (2800-3200) LLLL — VERY SPARSE ~35 vph each               -->
+<!--  CHANGED: was 80-140 vph, now matches BeST off-peak levels          -->
+<!--  =================================================================  -->
+<!-- BLOCK 8 Sub-part (2800–3000)  -->
+<flow id="A_L-20" begin="2800" end="3000" route="A_OUT_B" vehsPerHour="4" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-20" begin="2800" end="3000" route="A_OUT_A" vehsPerHour="30" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-20" begin="2800" end="3000" route="A_OUT_D" vehsPerHour="4" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_L-20" begin="2800" end="3000" route="B_OUT_C" vehsPerHour="3" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-20" begin="2800" end="3000" route="B_OUT_B" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-20" begin="2800" end="3000" route="B_OUT_A" vehsPerHour="3" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_L-20" begin="2800" end="3000" route="C_OUT_D" vehsPerHour="4" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-20" begin="2800" end="3000" route="C_OUT_C" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-20" begin="2800" end="3000" route="C_OUT_B" vehsPerHour="4" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_L-20" begin="2800" end="3000" route="D_OUT_A" vehsPerHour="3" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-20" begin="2800" end="3000" route="D_OUT_D" vehsPerHour="25" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-20" begin="2800" end="3000" route="D_OUT_C" vehsPerHour="3" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<!-- BLOCK 8 Sub-part (3000–3200)  -->
+<flow id="A_L-21" begin="3000" end="3200" route="A_OUT_B" vehsPerHour="3" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-21" begin="3000" end="3200" route="A_OUT_A" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-21" begin="3000" end="3200" route="A_OUT_D" vehsPerHour="3" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_L-21" begin="3000" end="3200" route="B_OUT_C" vehsPerHour="4" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-21" begin="3000" end="3200" route="B_OUT_B" vehsPerHour="30" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-21" begin="3000" end="3200" route="B_OUT_A" vehsPerHour="4" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_L-21" begin="3000" end="3200" route="C_OUT_D" vehsPerHour="5" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-21" begin="3000" end="3200" route="C_OUT_C" vehsPerHour="40" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-21" begin="3000" end="3200" route="C_OUT_B" vehsPerHour="4" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_L-21" begin="3000" end="3200" route="D_OUT_A" vehsPerHour="3" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-21" begin="3000" end="3200" route="D_OUT_D" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-21" begin="3000" end="3200" route="D_OUT_C" vehsPerHour="3" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<!-- ================================================================= -->
+<!-- BLOCK 9 (3200-3600) MMMH                                            -->
+<!-- WITH 9 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+<!-- ================================================================= -->
+
+<!--BLOCK 9 Sub-part (3200–3400) -->
+<flow id="A_L-23" begin="3200" end="3400" route="A_OUT_B" vehsPerHour="59" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-23" begin="3200" end="3400" route="A_OUT_A" vehsPerHour="344" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-23" begin="3200" end="3400" route="A_OUT_D" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-23" begin="3200" end="3400" route="B_OUT_C" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-23" begin="3200" end="3400" route="B_OUT_B" vehsPerHour="265" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-23" begin="3200" end="3400" route="B_OUT_A" vehsPerHour="31" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-23" begin="3200" end="3400" route="C_OUT_D" vehsPerHour="44" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-23" begin="3200" end="3400" route="C_OUT_C" vehsPerHour="253" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-23" begin="3200" end="3400" route="C_OUT_B" vehsPerHour="49" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-23" begin="3200" end="3400" route="D_OUT_A" vehsPerHour="50" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-23" begin="3200" end="3400" route="D_OUT_D" vehsPerHour="553" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-23" begin="3200" end="3400" route="D_OUT_C" vehsPerHour="71" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 9 Sub-part (3400–3600) -->
+<flow id="A_L-24" begin="3400" end="3600" route="A_OUT_B" vehsPerHour="59" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-24" begin="3400" end="3600" route="A_OUT_A" vehsPerHour="384" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-24" begin="3400" end="3600" route="A_OUT_D" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-24" begin="3400" end="3600" route="B_OUT_C" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-24" begin="3400" end="3600" route="B_OUT_B" vehsPerHour="265" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-24" begin="3400" end="3600" route="B_OUT_A" vehsPerHour="31" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-24" begin="3400" end="3600" route="C_OUT_D" vehsPerHour="44" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-24" begin="3400" end="3600" route="C_OUT_C" vehsPerHour="413" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-24" begin="3400" end="3600" route="C_OUT_B" vehsPerHour="49" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-24" begin="3400" end="3600" route="D_OUT_A" vehsPerHour="50" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-24" begin="3400" end="3600" route="D_OUT_D" vehsPerHour="553" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-24" begin="3400" end="3600" route="D_OUT_C" vehsPerHour="71" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 10 (3600-4000) LLLH                                            -->
+<!-- WITH 10 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+<!-- ================================================================= -->
+
+<!--BLOCK 10 Sub-part (3600–3800) -->
+<flow id="A_L-26" begin="3600" end="3800" route="A_OUT_B" vehsPerHour="36" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-26" begin="3600" end="3800" route="A_OUT_A" vehsPerHour="136" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-26" begin="3600" end="3800" route="A_OUT_D" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-26" begin="3600" end="3800" route="B_OUT_C" vehsPerHour="30" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-26" begin="3600" end="3800" route="B_OUT_B" vehsPerHour="80" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-26" begin="3600" end="3800" route="B_OUT_A" vehsPerHour="20" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-26" begin="3600" end="3800" route="C_OUT_D" vehsPerHour="39" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-26" begin="3600" end="3800" route="C_OUT_C" vehsPerHour="108" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-26" begin="3600" end="3800" route="C_OUT_B" vehsPerHour="25" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-26" begin="3600" end="3800" route="D_OUT_A" vehsPerHour="70" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-26" begin="3600" end="3800" route="D_OUT_D" vehsPerHour="640" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-26" begin="3600" end="3800" route="D_OUT_C" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 10 Sub-part (3800–4000) -->
+<flow id="A_L-27" begin="3800" end="4000" route="A_OUT_B" vehsPerHour="36" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-27" begin="3800" end="4000" route="A_OUT_A" vehsPerHour="136" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-27" begin="3800" end="4000" route="A_OUT_D" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-27" begin="3800" end="4000" route="B_OUT_C" vehsPerHour="30" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-27" begin="3800" end="4000" route="B_OUT_B" vehsPerHour="140" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-27" begin="3800" end="4000" route="B_OUT_A" vehsPerHour="20" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-27" begin="3800" end="4000" route="C_OUT_D" vehsPerHour="39" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-27" begin="3800" end="4000" route="C_OUT_C" vehsPerHour="108" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-27" begin="3800" end="4000" route="C_OUT_B" vehsPerHour="25" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-27" begin="3800" end="4000" route="D_OUT_A" vehsPerHour="70" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-27" begin="3800" end="4000" route="D_OUT_D" vehsPerHour="690" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-27" begin="3800" end="4000" route="D_OUT_C" vehsPerHour="57" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 11 (4000-4400) LMLH                                            -->
+<!-- WITH 11 SUB-PARTS THAT HAVE SOME WHAT DIFF VALUE                   -->
+<!-- ================================================================= -->
+
+<!--BLOCK 11 Sub-part (4000–4200) -->
+<flow id="A_L-29" begin="4000" end="4200" route="A_OUT_B" vehsPerHour="29" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-29" begin="4000" end="4200" route="A_OUT_A" vehsPerHour="84" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-29" begin="4000" end="4200" route="A_OUT_D" vehsPerHour="30" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-29" begin="4000" end="4200" route="B_OUT_C" vehsPerHour="50" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-29" begin="4000" end="4200" route="B_OUT_B" vehsPerHour="313" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-29" begin="4000" end="4200" route="B_OUT_A" vehsPerHour="37" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-29" begin="4000" end="4200" route="C_OUT_D" vehsPerHour="21" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-29" begin="4000" end="4200" route="C_OUT_C" vehsPerHour="100" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-29" begin="4000" end="4200" route="C_OUT_B" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-29" begin="4000" end="4200" route="D_OUT_A" vehsPerHour="69" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-29" begin="4000" end="4200" route="D_OUT_D" vehsPerHour="654" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-29" begin="4000" end="4200" route="D_OUT_C" vehsPerHour="77" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 11 Sub-part (4200–4400) -->
+<flow id="A_L-30" begin="4200" end="4400" route="A_OUT_B" vehsPerHour="29" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-30" begin="4200" end="4400" route="A_OUT_A" vehsPerHour="84" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-30" begin="4200" end="4400" route="A_OUT_D" vehsPerHour="30" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-30" begin="4200" end="4400" route="B_OUT_C" vehsPerHour="50" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-30" begin="4200" end="4400" route="B_OUT_B" vehsPerHour="413" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-30" begin="4200" end="4400" route="B_OUT_A" vehsPerHour="37" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-30" begin="4200" end="4400" route="C_OUT_D" vehsPerHour="21" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-30" begin="4200" end="4400" route="C_OUT_C" vehsPerHour="100" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-30" begin="4200" end="4400" route="C_OUT_B" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-30" begin="4200" end="4400" route="D_OUT_A" vehsPerHour="69" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-30" begin="4200" end="4400" route="D_OUT_D" vehsPerHour="554" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-30" begin="4200" end="4400" route="D_OUT_C" vehsPerHour="77" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- ================================================================= -->
+<!-- BLOCK 12 (4400-4800) MEDIUM BALANCED — ramp-down begins            -->
+<!-- ~230 vph each. Symmetric balanced-medium states.                  -->
+<!-- ================================================================= -->
+
+<!--BLOCK 12 Sub-part (4400–4600) -->
+<flow id="A_L-32" begin="4400" end="4600" route="A_OUT_B" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-32" begin="4400" end="4600" route="A_OUT_A" vehsPerHour="210" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-32" begin="4400" end="4600" route="A_OUT_D" vehsPerHour="24" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-32" begin="4400" end="4600" route="B_OUT_C" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-32" begin="4400" end="4600" route="B_OUT_B" vehsPerHour="210" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-32" begin="4400" end="4600" route="B_OUT_A" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-32" begin="4400" end="4600" route="C_OUT_D" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-32" begin="4400" end="4600" route="C_OUT_C" vehsPerHour="210" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-32" begin="4400" end="4600" route="C_OUT_B" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-32" begin="4400" end="4600" route="D_OUT_A" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-32" begin="4400" end="4600" route="D_OUT_D" vehsPerHour="210" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-32" begin="4400" end="4600" route="D_OUT_C" vehsPerHour="26" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 12 Sub-part (4600–4800) -->
+<flow id="A_L-33" begin="4600" end="4800" route="A_OUT_B" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-33" begin="4600" end="4800" route="A_OUT_A" vehsPerHour="230" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-33" begin="4600" end="4800" route="A_OUT_D" vehsPerHour="24" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-33" begin="4600" end="4800" route="B_OUT_C" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-33" begin="4600" end="4800" route="B_OUT_B" vehsPerHour="230" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-33" begin="4600" end="4800" route="B_OUT_A" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-33" begin="4600" end="4800" route="C_OUT_D" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-33" begin="4600" end="4800" route="C_OUT_C" vehsPerHour="230" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-33" begin="4600" end="4800" route="C_OUT_B" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-33" begin="4600" end="4800" route="D_OUT_A" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-33" begin="4600" end="4800" route="D_OUT_D" vehsPerHour="230" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-33" begin="4600" end="4800" route="D_OUT_C" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 13 (4800-5200) SINGLE-DOMINANT A — A~320, others ~90        -->
+<!-- Asymmetric A-heavy low-medium states. (rotation 1 of 4)           -->
+<!-- 400s to balance head, which has no A-dominant block.              -->
+<!-- ================================================================= -->
+<flow id="A_L-35" begin="4800" end="5200" route="A_OUT_B" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-35" begin="4800" end="5200" route="A_OUT_A" vehsPerHour="320" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-35" begin="4800" end="5200" route="A_OUT_D" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-35" begin="4800" end="5200" route="B_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-35" begin="4800" end="5200" route="B_OUT_B" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-35" begin="4800" end="5200" route="B_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-35" begin="4800" end="5200" route="C_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-35" begin="4800" end="5200" route="C_OUT_C" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-35" begin="4800" end="5200" route="C_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-35" begin="4800" end="5200" route="D_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-35" begin="4800" end="5200" route="D_OUT_D" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-35" begin="4800" end="5200" route="D_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 14 (5200-5600) SINGLE-DOMINANT B — B~320, others ~90        -->
+<!-- Asymmetric B-heavy low-medium states. (rotation 2 of 4)           -->
+<!-- 400s to balance head, which has no B-dominant block.              -->
+<!-- ================================================================= -->
+<flow id="A_L-38" begin="5200" end="5600" route="A_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-38" begin="5200" end="5600" route="A_OUT_A" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-38" begin="5200" end="5600" route="A_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-38" begin="5200" end="5600" route="B_OUT_C" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-38" begin="5200" end="5600" route="B_OUT_B" vehsPerHour="320" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-38" begin="5200" end="5600" route="B_OUT_A" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-38" begin="5200" end="5600" route="C_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-38" begin="5200" end="5600" route="C_OUT_C" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-38" begin="5200" end="5600" route="C_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-38" begin="5200" end="5600" route="D_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-38" begin="5200" end="5600" route="D_OUT_D" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-38" begin="5200" end="5600" route="D_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 15 (5600-5800) SINGLE-DOMINANT C — C~320, others ~90        -->
+<!-- Asymmetric C-heavy low-medium states. (rotation 3 of 4)           -->
+<!-- 200s — head already provides 400s C-dominant.                     -->
+<!-- ================================================================= -->
+<flow id="A_L-41" begin="5600" end="5800" route="A_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-41" begin="5600" end="5800" route="A_OUT_A" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-41" begin="5600" end="5800" route="A_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-41" begin="5600" end="5800" route="B_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-41" begin="5600" end="5800" route="B_OUT_B" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-41" begin="5600" end="5800" route="B_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-41" begin="5600" end="5800" route="C_OUT_D" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-41" begin="5600" end="5800" route="C_OUT_C" vehsPerHour="320" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-41" begin="5600" end="5800" route="C_OUT_B" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-41" begin="5600" end="5800" route="D_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-41" begin="5600" end="5800" route="D_OUT_D" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-41" begin="5600" end="5800" route="D_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 16 (5800-6000) SINGLE-DOMINANT D — D~320, others ~90        -->
+<!-- Asymmetric D-heavy low-medium states. (rotation 4 of 4)           -->
+<!-- 200s — head already provides 400s D-dominant.                     -->
+<!-- ================================================================= -->
+<flow id="A_L-44" begin="5800" end="6000" route="A_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-44" begin="5800" end="6000" route="A_OUT_A" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-44" begin="5800" end="6000" route="A_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-44" begin="5800" end="6000" route="B_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-44" begin="5800" end="6000" route="B_OUT_B" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-44" begin="5800" end="6000" route="B_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-44" begin="5800" end="6000" route="C_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-44" begin="5800" end="6000" route="C_OUT_C" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-44" begin="5800" end="6000" route="C_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-44" begin="5800" end="6000" route="D_OUT_A" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-44" begin="5800" end="6000" route="D_OUT_D" vehsPerHour="320" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-44" begin="5800" end="6000" route="D_OUT_C" vehsPerHour="35" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 17 (6000-6400) LOW BALANCED  ~100 vph each                   -->
+<!-- Generates (1,1,1,1) (2,1,0,1) symmetric low states.               -->
+<!-- ================================================================= -->
+
+<!--BLOCK 17 Sub-part (6000–6200) -->
+<flow id="A_L-45" begin="6000" end="6200" route="A_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-45" begin="6000" end="6200" route="A_OUT_A" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-45" begin="6000" end="6200" route="A_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-45" begin="6000" end="6200" route="B_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-45" begin="6000" end="6200" route="B_OUT_B" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-45" begin="6000" end="6200" route="B_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-45" begin="6000" end="6200" route="C_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-45" begin="6000" end="6200" route="C_OUT_C" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-45" begin="6000" end="6200" route="C_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-45" begin="6000" end="6200" route="D_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-45" begin="6000" end="6200" route="D_OUT_D" vehsPerHour="90" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-45" begin="6000" end="6200" route="D_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+
+<!--BLOCK 17 Sub-part (6200–6400) -->
+<flow id="A_L-46" begin="6200" end="6400" route="A_OUT_B" vehsPerHour="12" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_S-46" begin="6200" end="6400" route="A_OUT_A" vehsPerHour="100" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_R-46" begin="6200" end="6400" route="A_OUT_D" vehsPerHour="12" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="B_L-46" begin="6200" end="6400" route="B_OUT_C" vehsPerHour="12" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-46" begin="6200" end="6400" route="B_OUT_B" vehsPerHour="100" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_R-46" begin="6200" end="6400" route="B_OUT_A" vehsPerHour="12" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="C_L-46" begin="6200" end="6400" route="C_OUT_D" vehsPerHour="12" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-46" begin="6200" end="6400" route="C_OUT_C" vehsPerHour="100" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_R-46" begin="6200" end="6400" route="C_OUT_B" vehsPerHour="12" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<flow id="D_L-46" begin="6200" end="6400" route="D_OUT_A" vehsPerHour="12" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-46" begin="6200" end="6400" route="D_OUT_D" vehsPerHour="100" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_R-46" begin="6200" end="6400" route="D_OUT_C" vehsPerHour="12" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 18 (6400-6700) SPARSE PAIR A+C  A~80 C~80, B/D near 0       -->
+<!-- Cross-pair sparse states (1,0,2,0) (2,0,1,0).                     -->
+<!-- ================================================================= -->
+<flow id="A_S-47" begin="6400" end="6700" route="A_OUT_A" vehsPerHour="75" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="A_L-47" begin="6400" end="6700" route="A_OUT_B" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-47" begin="6400" end="6700" route="C_OUT_C" vehsPerHour="80" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_L-47" begin="6400" end="6700" route="C_OUT_D" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 19 (6700-7000) SPARSE PAIR B+D  B~80 D~80, A/C near 0       -->
+<!-- Cross-pair sparse states (0,1,0,2) (0,2,0,1).                     -->
+<!-- ================================================================= -->
+<flow id="B_S-48" begin="6700" end="7000" route="B_OUT_B" vehsPerHour="80" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_L-48" begin="6700" end="7000" route="B_OUT_C" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-48" begin="6700" end="7000" route="D_OUT_D" vehsPerHour="80" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_L-48" begin="6700" end="7000" route="D_OUT_A" vehsPerHour="10" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!-- ================================================================= -->
+<!-- BLOCK 20 (7000-7900) VERY SPARSE ALL  ~30 vph each                 -->
+<!-- Off-peak equivalent. Mostly (0,0,0,0) and single-vehicle states.  -->
+<!-- Symmetric — no approach favoured.                                 -->
+<!-- ================================================================= -->
+
+<!--BLOCK 20 Sub-part (7000–7400) -->
+<flow id="A_S-49" begin="7000" end="7400" route="A_OUT_A" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-49" begin="7000" end="7400" route="B_OUT_B" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-49" begin="7000" end="7400" route="C_OUT_C" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-49" begin="7000" end="7400" route="D_OUT_D" vehsPerHour="32" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+<!--BLOCK 20 Sub-part (7400–7900) -->
+<flow id="A_S-50" begin="7400" end="7900" route="A_OUT_A" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="B_S-50" begin="7400" end="7900" route="B_OUT_B" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="C_S-50" begin="7400" end="7900" route="C_OUT_C" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+<flow id="D_S-50" begin="7400" end="7900" route="D_OUT_D" vehsPerHour="28" type="DefaultVehicle" departLane="best" departSpeed="max"/>
+
+</routes>

@@ -1,0 +1,243 @@
+/* ════════════════════════════════════════════════════════════
+   TRAFFIX — mobile.css
+   Loaded with media="(max-width: 860px)" — desktops never apply
+   this. Block order matters: 860 → 640 → 700, exactly as in the
+   original sheet, so the phone-hero block keeps winning the
+   cascade over the 640 block where they overlap.
+   ════════════════════════════════════════════════════════════ */
+
+@media (max-width:860px) {
+
+  /* the HUD's styling lives in desktop.css, which phones never load —
+     hide it here so it can't render as bare text. (desktop.css hides it
+     for the 861–1000px range.) */
+  .sim-hud {
+    display: none
+  }
+
+  .nav-burger {
+    display: flex
+  }
+
+  nav.menu-open {
+    background: rgba(11, 13, 14, .97)
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 10px clamp(28px, 3.5vw, 68px) 18px;
+    background: rgba(11, 13, 14, .96);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+  }
+
+  .nav-links a {
+    padding: 10px 0;
+    font-size: 15px;
+  }
+
+  .nav-links.open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  nav .btn {
+    margin-left: auto
+  }
+
+  .step {
+    grid-template-columns: 48px 1fr;
+    gap: 18px
+  }
+
+  .step p {
+    grid-column: 2
+  }
+
+  #results .stat-grid {
+    grid-template-columns: 1fr
+  }
+
+  /* the tour keeps its desktop layout at every width — on phones the
+     whole thing is scaled down to fit by the fitTour() script */
+
+  #built .feat-grid {
+    grid-template-columns: 1fr
+  }
+}
+
+@media (max-width:640px) {
+  .wrap {
+    padding: 0 20px
+  }
+
+  section {
+    padding: 72px 0
+  }
+
+  .nav-inner {
+    height: 60px
+  }
+
+  .hero-cta {
+    gap: 10px
+  }
+
+  .stat {
+    padding: 30px 24px
+  }
+
+  .rchart {
+    padding: 24px 16px
+  }
+
+  .rchart h4 {
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start
+  }
+
+  .cbar {
+    grid-template-columns: 70px 1fr 76px;
+    gap: 10px
+  }
+
+  .step {
+    padding: 32px 0
+  }
+
+  .feat {
+    padding: 26px 20px
+  }
+
+  .tech-strip {
+    margin-top: 42px
+  }
+
+  #cta {
+    padding: 90px 0
+  }
+
+  .foot-inner p {
+    margin-left: 0;
+    width: 100%
+  }
+
+  .scroll-hint {
+    display: none
+  }
+}
+
+/* ── phone hero ──────────────────────────────────────────
+   No kicker offset, no subhead, headline tight under the nav; the
+   road runs down the RIGHT side so cars flow beside the text, not
+   behind it. Late in the sheet on purpose: the base .hero-content
+   and h1 rules would override these in an earlier block. */
+@media (max-width:700px) {
+  .nav-inner {
+    position: relative;
+    padding: 0 16px;
+  }
+
+  nav .btn:not(.nav-mobile-btn) {
+    display: none !important;
+  }
+
+  .brand {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .nav-burger {
+    margin-left: auto;
+  }
+
+  .nav-mobile-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+    transform: none !important;
+    margin-left: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .nav-mobile-btn:hover {
+    box-shadow: none !important;
+  }
+
+
+  .kicker {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    margin-top: -20px;
+    margin-bottom: 36px;
+    transform: none;
+  }
+
+  .hero-sub {
+    display: none !important;
+  }
+
+  /* no hero buttons on phone — the nav's "Try it live" covers it,
+     the junction is the whole show */
+  .hero-cta {
+    display: none;
+  }
+
+  body>header {
+    align-items: flex-start;
+  }
+
+  /* no text shield on phones — the title sits directly on the junction */
+  .hero-overlay-left {
+    display: none;
+  }
+
+  .hero-content {
+    position: absolute;
+    inset: 0;
+    padding: 92px 16px 40px;
+    box-sizing: border-box;
+  }
+
+  h1 {
+    /* 24px on a 375px phone, grows with the viewport so the in-between
+       widths (landscape phones, small tablets) don't get a lost headline */
+    font-size: clamp(24px, 6.4vw, 38px);
+    line-height: 1.2;
+    margin-bottom: 12px;
+    max-width: 14ch;
+  }
+
+  .scroll-hint {
+    display: none;
+  }
+
+  h1 .ln,
+  h1 .ln span {
+    height: auto !important;
+    line-height: inherit !important;
+  }
+
+  h1 .ln:nth-child(1),
+  h1 .ln:nth-child(2) {
+    transform: none;
+  }
+}

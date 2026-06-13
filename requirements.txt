@@ -1,0 +1,6 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+eclipse-sumo==1.25.0
+sumolib==1.25.0
+traci==1.25.0
+numpy>=1.24

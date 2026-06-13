@@ -1,0 +1,3803 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffix — Reinforcement-learning traffic signal control</title>
+  <meta name="description"
+    content="Traffix is a lightweight reinforcement-learning traffic signal controller. 60% less delay than fixed-time, 25% less than actuated — no GPU required.">
+  <meta name="theme-color" content="#0b0d0e">
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0d0e'/%3E%3Crect x='21' y='9' width='22' height='46' rx='9' fill='%23101315' stroke='%231e2326' stroke-width='2'/%3E%3Ccircle cx='32' cy='20' r='5.5' fill='%233a2426'/%3E%3Ccircle cx='32' cy='32' r='5.5' fill='%23d9a13b'/%3E%3Ccircle cx='32' cy='44' r='5.5' fill='%231e3328'/%3E%3C/svg%3E">
+  <!-- og:image is resolved relative to the deployed origin; replace og.png
+       with an absolute URL once the site has a domain -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Traffix — Signals that learn">
+  <meta property="og:description"
+    content="Reinforcement-learning traffic signal control. 60% less delay than fixed-time, 25% less than actuated — no GPU required.">
+  <meta property="og:image" content="og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Traffix — Signals that learn">
+  <meta name="twitter:description"
+    content="Reinforcement-learning traffic signal control. 60% less delay than fixed-time — no GPU required.">
+  <meta name="twitter:image" content="og.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d0e;
+      --bg2: #101315;
+      --text: #e8e6e1;
+      --muted: #8b9096;
+      --faint: #54595e;
+      --line: #1e2326;
+      --amber: #d9a13b;
+      --green: #5fae7e;
+      --red: #b8584f;
+      --sans: 'IBM Plex Sans', system-ui, sans-serif;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden
+    }
+
+    #bg-dots {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      pointer-events: none
+    }
+
+    ::selection {
+      background: var(--amber);
+      color: #1a1205
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 32px
+    }
+
+    .mono {
+      font-family: var(--mono)
+    }
+
+    /* ── nav ─────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg);
+      transition: background .3s
+    }
+
+    nav.scrolled {
+      background: var(--bg);
+      backdrop-filter: blur(12px)
+    }
+
+    .nav-inner {
+      width: 100%;
+      padding: 0 clamp(28px, 3.5vw, 68px);
+      height: 68px;
+      display: flex;
+      align-items: center;
+      gap: 36px
+    }
+
+    .nav-car {
+      position: absolute;
+      bottom: -3.5px;
+      left: -20px;
+      width: 14px;
+      height: 6px;
+      pointer-events: none;
+      z-index: 60;
+      transition: opacity 0.3s ease;
+    }
+
+    nav.scrolled .nav-car {
+      opacity: 0;
+    }
+
+    .nav-mobile-btn {
+      display: none;
+    }
+
+
+    .brand {
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: .16em
+    }
+
+    .brand i {
+      font-style: normal;
+      color: var(--amber)
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      margin-left: auto;
+      margin-right: 8px
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      color: var(--muted);
+      transition: color .2s
+    }
+
+    .nav-links a:hover {
+      color: var(--amber)
+    }
+
+    .nav-links a.active {
+      color: var(--amber)
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: transform .2s, background .2s, border-color .2s, box-shadow .2s;
+      white-space: nowrap
+    }
+
+    .btn .ar {
+      transition: transform .25s;
+      display: inline-block
+    }
+
+    .btn:hover .ar {
+      transform: translateX(4px)
+    }
+
+    .btn:hover {
+      transform: scale(1.02)
+    }
+
+    .btn:active {
+      transform: scale(.97)
+    }
+
+    .btn-solid {
+      background: var(--text);
+      color: #101214
+    }
+
+    .btn-solid:hover {
+      background: #fff;
+      box-shadow: 0 4px 24px rgba(232, 230, 225, 0.18)
+    }
+
+    .btn-line {
+      border: 1px solid #2c3236;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.01);
+      backdrop-filter: blur(2px)
+    }
+
+    .btn-line:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+      box-shadow: 0 4px 24px rgba(217, 161, 59, 0.08)
+    }
+
+    nav .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      border: 1px solid #2c3236;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.01);
+      backdrop-filter: blur(2px);
+      transition: background .2s, color .2s, border-color .2s, box-shadow .2s;
+    }
+
+    nav .btn:hover {
+      background: var(--text);
+      color: #101214;
+      border-color: var(--text);
+      box-shadow: 0 4px 18px rgba(232, 230, 225, 0.15);
+    }
+
+    .nav-burger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 38px;
+      height: 38px;
+      padding: 8px;
+      background: transparent;
+      border: 1px solid #2c3236;
+      border-radius: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .nav-burger span {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background: var(--text);
+      border-radius: 1px;
+      transition: transform .25s, opacity .25s;
+    }
+
+    nav.menu-open .nav-burger span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    nav.menu-open .nav-burger span:nth-child(2) {
+      opacity: 0;
+    }
+
+    nav.menu-open .nav-burger span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    /* ── hero ────────────────────────────────────────────── */
+    body>header {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      overflow: hidden
+    }
+
+    #sim {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: pan-y
+    }
+
+    .hero-content {
+      pointer-events: none
+    }
+
+    .hero-content a {
+      pointer-events: auto
+    }
+
+    .hero-fade {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(11, 13, 14, .45), rgba(11, 13, 14, 0) 26%, rgba(11, 13, 14, 0) 72%, var(--bg))
+    }
+
+    /* ════════ TEXT SHIELD — tune the dark patch here ════════
+       --shield-size   how far it reaches in from the left edge
+                       (on mobile: down from the top). 42% ends well
+                       before the middle; raise/lower to taste.
+       --shield-solid  how much of that reach is fully dark before
+                       the fade-out begins (% of the shield itself).
+       --shield-blur   how strongly it blurs the world behind it.
+                       Set 0px for a pure darkening with no blur.  */
+    :root {
+      --shield-size: 42%;
+      --shield-solid: 55%;
+      --shield-blur: 6px;
+    }
+
+    .hero-overlay-left {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--shield-size);
+      z-index: 1;
+      pointer-events: none;
+      background: linear-gradient(to right, rgba(11, 13, 14, 0.97) 0%, rgba(11, 13, 14, 0.88) var(--shield-solid), rgba(11, 13, 14, 0) 100%);
+      backdrop-filter: blur(var(--shield-blur));
+      -webkit-backdrop-filter: blur(var(--shield-blur));
+      mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) var(--shield-solid), rgba(0, 0, 0, 0) 100%);
+      -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, 1) var(--shield-solid), rgba(0, 0, 0, 0) 100%)
+    }
+
+    /* phone-hero rules live at the END of this stylesheet — the base
+       .hero-content / h1 rules below would override them here */
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: calc(var(--cy) - var(--road-half) - 59px) clamp(28px, 3.5vw, 68px) 80px;
+      width: 100%;
+      max-width: none
+    }
+
+    .kicker {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--amber);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      transform: translateY(-60px);
+    }
+
+    h1 {
+      font-size: 80px;
+      line-height: 1.06;
+      font-weight: 700;
+      letter-spacing: -.025em;
+      margin-bottom: 24px;
+      max-width: 13ch
+    }
+
+    h1 .ln {
+      display: block;
+      height: calc(var(--road-half) + 0.4em);
+      line-height: var(--road-half);
+      padding-bottom: 0.4em;
+      margin-bottom: -0.4em;
+      clip-path: inset(0 0 0 0);
+      animation: unclip 1.2s steps(1, end) forwards;
+    }
+
+    @keyframes unclip {
+      0% {
+        clip-path: inset(0 0 0 0);
+      }
+
+      99% {
+        clip-path: inset(0 0 0 0);
+      }
+
+      100% {
+        clip-path: inset(-50px -50px -50px -50px);
+      }
+    }
+
+    h1 .ln:nth-child(1) {
+      transform: translateY(-20px);
+    }
+
+    h1 .ln:nth-child(2) {
+      transform: translateY(-10px);
+    }
+
+    @property --text-tint-2 {
+      syntax: '<color>';
+      inherits: false;
+      initial-value: #a5abb6;
+    }
+
+    h1 .ln span {
+      display: block;
+      height: calc(var(--road-half) + 0.4em);
+      transform: translateY(110%);
+      animation: rise .9s cubic-bezier(.16, 1, .3, 1) forwards;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: --text-tint-2 1.0s ease;
+    }
+
+    h1 .ln:nth-child(1) span {
+      background-image: linear-gradient(180deg, #ffffff 0%, #a5abb6 100%);
+    }
+
+    h1 .ln:nth-child(2) span {
+      animation-delay: .12s;
+      background-image: linear-gradient(180deg, #ffffff 0%, var(--text-tint-2, #a5abb6) 100%);
+    }
+
+    @keyframes rise {
+      to {
+        transform: translateY(0)
+      }
+    }
+
+    .hero-sub {
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.8;
+      margin-top: 60px;
+      margin-bottom: 72px;
+      opacity: 0;
+      animation: fadeup .8s ease .45s forwards;
+      position: relative;
+      top: 0;
+    }
+
+    .hero-sub b {
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 14px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeup .8s ease .6s forwards
+    }
+
+    @keyframes fadeup {
+      from {
+        opacity: 0;
+        transform: translateY(18px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--faint);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .2em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      animation: fadeup 1s ease 1.4s forwards
+    }
+
+    .scroll-hint::after {
+      content: '';
+      width: 1px;
+      height: 34px;
+      background: var(--faint);
+      animation: drip 2.2s ease-in-out infinite
+    }
+
+    @keyframes drip {
+      0% {
+        transform: scaleY(0);
+        transform-origin: top
+      }
+
+      45% {
+        transform: scaleY(1);
+        transform-origin: top
+      }
+
+      55% {
+        transform: scaleY(1);
+        transform-origin: bottom
+      }
+
+      100% {
+        transform: scaleY(0);
+        transform-origin: bottom
+      }
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 42px;
+      opacity: 0;
+      animation: fadeup .8s ease .78s forwards
+    }
+
+    .hero-stats b {
+      display: block;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: var(--text);
+      line-height: 1.1
+    }
+
+    .hero-stats b .ms {
+      display: inline-block;
+      margin-left: -0.28em;
+    }
+
+    .hero-stats div:first-child b {
+      color: var(--amber)
+    }
+
+    .hero-stats span {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--faint);
+      letter-spacing: .05em
+    }
+
+    /* hero sim HUD */
+    .sim-hud {
+      position: absolute;
+      z-index: 2;
+      right: clamp(28px, 4vw, 80px);
+      bottom: 48px;
+      font-family: var(--mono);
+      font-size: 11px;
+      width: 226px;
+      border-left: 2px solid var(--line);
+      padding: 2px 0 2px 16px;
+      opacity: 0;
+      animation: fadeup 1s ease 1s forwards;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color .25s
+    }
+
+    .sim-hud:hover {
+      border-left-color: var(--amber)
+    }
+
+    .hud-hint {
+      margin-top: 10px;
+      padding-top: 9px;
+      border-top: 1px solid var(--line);
+      font-size: 9.5px;
+      color: var(--faint);
+      letter-spacing: .04em;
+      line-height: 1.6;
+      transition: color .25s
+    }
+
+    .sim-hud:hover .hud-hint {
+      color: var(--amber)
+    }
+
+    .hud-modes-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .hud-mode-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      transition: all .2s ease;
+    }
+
+    .hud-status-light {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #1e2326;
+      transition: background .3s ease, box-shadow .3s ease;
+    }
+
+    .hud-mode-name {
+      color: var(--faint);
+      font-weight: 500;
+      transition: color .3s ease;
+    }
+
+    #opt-fixed.active .hud-status-light {
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber);
+    }
+
+    #opt-fixed.active .hud-mode-name {
+      color: var(--text);
+    }
+
+    #opt-rl.active .hud-status-light {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    #opt-rl.active .hud-mode-name {
+      color: var(--green);
+    }
+
+    .hud-term {
+      margin-top: 10px;
+      height: 66px;
+      overflow: hidden;
+      font-size: 10.5px;
+      line-height: 1.6;
+      color: var(--faint);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end
+    }
+
+    .hud-term div {
+      white-space: nowrap;
+      overflow: hidden
+    }
+
+    .hud-term div:last-child {
+      color: var(--amber)
+    }
+
+    .hud-inject {
+      margin-top: 11px;
+      width: 100%;
+      background: transparent;
+      border: 1px solid rgba(217, 161, 59, .55);
+      color: var(--amber);
+      border-radius: 7px;
+      padding: 6px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: .06em;
+      cursor: pointer;
+      transition: background .2s, color .2s
+    }
+
+    .hud-inject:hover {
+      background: var(--amber);
+      color: #1a1205;
+      border-color: var(--amber)
+    }
+
+    @media (max-width:1000px) {
+      .sim-hud {
+        display: none
+      }
+    }
+
+    /* ── scroll reveal ───────────────────────────────────── */
+    .rv {
+      opacity: 0;
+      transform: translateY(26px);
+      transition: opacity .8s ease, transform .8s cubic-bezier(.16, 1, .3, 1)
+    }
+
+    .rv.in {
+      opacity: 1;
+      transform: none
+    }
+
+    .gsap-active .rv {
+      transition: none !important;
+    }
+
+    .rv.d1 {
+      transition-delay: .1s
+    }
+
+    .rv.d2 {
+      transition-delay: .2s
+    }
+
+    .rv.d3 {
+      transition-delay: .3s
+    }
+
+    /* ── sections ────────────────────────────────────────── */
+    section {
+      padding: 110px 0;
+      border-top: 1px solid var(--line);
+      scroll-margin-top: 68px
+    }
+
+    .sec-tag {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--amber);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 18px
+    }
+
+    h2 {
+      font-size: clamp(30px, 4vw, 44px);
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      max-width: 18ch;
+      margin-bottom: 18px
+    }
+
+    .sec-sub {
+      color: var(--muted);
+      max-width: 560px;
+      font-size: 17px
+    }
+
+    /* stats */
+    #results .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-top: 56px
+    }
+
+    .stat {
+      background: var(--bg);
+      padding: 42px 36px;
+      position: relative;
+      overflow: hidden;
+      transition: background .3s
+    }
+
+    .stat:hover {
+      background: #0e1113
+    }
+
+    .stat::after,
+    .feat::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .35s;
+      pointer-events: none;
+      background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%),
+          rgba(217, 161, 59, .07), transparent 65%)
+    }
+
+    .stat:hover::after,
+    .feat:hover::after {
+      opacity: 1
+    }
+
+    .stat .num {
+      font-size: clamp(42px, 5vw, 64px);
+      font-weight: 700;
+      letter-spacing: -.03em;
+      line-height: 1;
+      color: var(--amber)
+    }
+
+    .stat .num em {
+      font-style: normal
+    }
+
+    .stat .lbl {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 15px
+    }
+
+    .stat .lbl b {
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .note {
+      margin-top: 22px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--faint)
+    }
+
+    /* results chart */
+    .rchart {
+      margin-top: 56px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--bg2);
+      padding: 36px 40px
+    }
+
+    .rchart h4 {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 26px
+    }
+
+    .rchart h4 span {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--faint);
+      font-weight: 400;
+      letter-spacing: .06em
+    }
+
+    .cbar {
+      display: grid;
+      grid-template-columns: 110px 1fr 92px;
+      align-items: center;
+      gap: 18px;
+      padding: 9px 0
+    }
+
+    .cbar .clbl {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--muted);
+      text-align: right
+    }
+
+    .cbar .ctrack {
+      height: 22px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, .03);
+      overflow: hidden
+    }
+
+    .cbar .cfill {
+      height: 100%;
+      width: 0;
+      border-radius: 5px;
+      background: #3a4046;
+      transition: width 1.3s cubic-bezier(.16, 1, .3, 1)
+    }
+
+    .cbar.hl .cfill {
+      background: var(--amber)
+    }
+
+    .cbar .cval {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .cbar.hl .cval {
+      color: var(--amber);
+      font-weight: 500
+    }
+
+    .cbar.hl .clbl {
+      color: var(--text)
+    }
+
+    .cbar .cfill {
+      transition: width 1.3s cubic-bezier(.16, 1, .3, 1), filter .25s
+    }
+
+    .cbar:hover .cfill {
+      filter: brightness(1.25)
+    }
+
+    .cbar:hover .clbl {
+      color: var(--text)
+    }
+
+    /* how it works */
+    .steps {
+      margin-top: 60px;
+      border-top: 1px solid var(--line)
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 90px 1fr 1.2fr;
+      gap: 32px;
+      padding: 44px 0;
+      border-bottom: 1px solid var(--line);
+      align-items: start
+    }
+
+    .step {
+      transition: background .3s
+    }
+
+    .step:hover {
+      background: linear-gradient(90deg, rgba(217, 161, 59, .03), transparent 60%)
+    }
+
+    .step .no {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--faint);
+      padding-top: 6px;
+      transition: color .3s
+    }
+
+    .step:hover .no {
+      color: var(--amber)
+    }
+
+    .step h3 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -.01em
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 15.5px
+    }
+
+    .step .tagline {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--amber);
+      margin-top: 10px
+    }
+
+    /* demo — auto-playing walkthrough of the comparison UI */
+    .tour {
+      margin-top: 56px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--bg2);
+      overflow: hidden;
+      position: relative
+    }
+
+    .tour-chrome {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap
+    }
+
+    .tour-chrome i {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #2c3236
+    }
+
+    .tour-chrome>span {
+      margin-left: 10px;
+      font-size: 11.5px;
+      color: var(--faint)
+    }
+
+    .tour-steps {
+      margin-left: auto;
+      display: flex;
+      gap: 8px
+    }
+
+    .ts {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--faint);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 12px;
+      transition: all .35s
+    }
+
+    .ts.act {
+      color: var(--amber);
+      border-color: var(--amber)
+    }
+
+    .tour-body {
+      display: grid;
+      grid-template-columns: 36px 206px 1fr
+    }
+
+    /* icon rail — mirrors the app's left strip */
+    .t-rail {
+      border-right: 1px solid var(--line);
+      background: #0d0f11;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0
+    }
+
+    .t-logo {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px
+    }
+
+    .t-logo i {
+      font-style: normal;
+      color: var(--amber)
+    }
+
+    .t-ric {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      color: var(--faint)
+    }
+
+    .t-ric.act {
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      color: var(--text)
+    }
+
+    .t-side {
+      border-right: 1px solid var(--line);
+      padding: 10px;
+      background: var(--bg)
+    }
+
+    .t-side h5 {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .16em;
+      color: var(--amber);
+      font-weight: 500;
+      margin-bottom: 8px
+    }
+
+    .t-kv {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 7px
+    }
+
+    .t-kv label {
+      font-size: 10px;
+      color: var(--muted)
+    }
+
+    .t-kv span {
+      font-size: 9.5px;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 2px 8px;
+      background: var(--bg2)
+    }
+
+    /* approach card — same look as the app's scenario builder */
+    .t-app {
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 6px 9px;
+      margin-bottom: 8px
+    }
+
+    .t-app header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 7px
+    }
+
+    .t-app header b {
+      font-size: 11px;
+      font-weight: 600
+    }
+
+    .t-app header span {
+      font-size: 9.5px;
+      color: var(--faint)
+    }
+
+    .t-row {
+      display: grid;
+      grid-template-columns: 46px 1fr 52px;
+      gap: 7px;
+      align-items: center;
+      margin-bottom: 7px
+    }
+
+    .t-row:last-child {
+      margin-bottom: 2px
+    }
+
+    .t-row label {
+      font-size: 10.5px;
+      color: var(--muted)
+    }
+
+    .t-row output {
+      font-size: 9.5px;
+      color: var(--text);
+      text-align: right;
+      white-space: nowrap
+    }
+
+    .t-slider {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--line);
+      overflow: hidden
+    }
+
+    .t-slider i {
+      display: block;
+      height: 100%;
+      width: 18%;
+      background: var(--faint);
+      border-radius: 2px;
+      transition: width 1s cubic-bezier(.16, 1, .3, 1), background .4s
+    }
+
+    .tour[data-step="1"] .t-slider i {
+      background: var(--amber)
+    }
+
+    .t-presets {
+      display: flex;
+      gap: 6px;
+      margin: 10px 0;
+      flex-wrap: wrap
+    }
+
+    .tp {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      transition: all .3s
+    }
+
+    .tp.on {
+      color: var(--amber);
+      border-color: var(--amber)
+    }
+
+    .t-deploy {
+      font-size: 11px;
+      text-align: center;
+      border-radius: 8px;
+      padding: 8px;
+      background: var(--amber);
+      color: #1a1205;
+      font-weight: 600
+    }
+
+    .t-main {
+      display: flex;
+      flex-direction: column
+    }
+
+    .t-vps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1
+    }
+
+    .t-vp {
+      position: relative;
+      min-height: 120px;
+      background: var(--bg);
+      overflow: hidden
+    }
+
+    .t-vp+.t-vp {
+      border-left: 1px solid var(--line)
+    }
+
+    .t-tag {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      z-index: 2;
+      font-size: 10px;
+      letter-spacing: .12em;
+      color: var(--muted);
+      border: 1px solid var(--line2);
+      border-radius: 6px;
+      padding: 4px 9px;
+      background: rgba(11, 13, 14, .8)
+    }
+
+    .t-tag::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--faint);
+      margin-right: 7px;
+      vertical-align: .5px
+    }
+
+    .t-tag.t-amber {
+      color: var(--amber);
+      border-color: rgba(217, 161, 59, .45)
+    }
+
+    .t-tag.t-amber::before {
+      background: var(--amber)
+    }
+
+    /* mini junction — same dark crossing as the real render */
+    .t-road {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 16px;
+      transform: translateY(-50%);
+      background: #151a21
+    }
+
+    .t-road.v {
+      left: 50%;
+      right: auto;
+      top: 0;
+      bottom: 0;
+      width: 16px;
+      height: auto;
+      transform: translateX(-50%)
+    }
+
+    /* cars are tiny colour-coded dots, like the SUMO view:
+       green = rolling, red = held at the line */
+    .t-car {
+      position: absolute;
+      border-radius: 1.5px;
+      background: #5fae7e;
+      opacity: 0;
+      /* hidden until the run starts */
+      animation-play-state: paused !important
+    }
+
+    .t-car.h {
+      width: 6px;
+      height: 3px;
+      left: -5%;
+      top: calc(50% + 2px)
+    }
+
+    .t-car.v {
+      width: 3px;
+      height: 6px;
+      top: -8%;
+      left: calc(50% - 5px)
+    }
+
+    /* fixed side queues three-deep at the light; RL side flows */
+    .t-car.sg {
+      animation: tStopGoH 6.5s linear infinite
+    }
+
+    .t-car.sg2 {
+      animation: tStopGoH2 6.5s linear infinite
+    }
+
+    .t-car.sg3 {
+      animation: tStopGoH3 6.5s linear infinite
+    }
+
+    .t-car.fl {
+      animation: tFlowH 4.5s linear infinite
+    }
+
+    .t-car.dn {
+      animation: tFlowV 5.5s linear infinite
+    }
+
+    .tour.playing .t-car {
+      opacity: 1;
+      animation-play-state: running !important
+    }
+
+    @keyframes tStopGoH {
+      0% {
+        left: -4%;
+        background: #5fae7e
+      }
+
+      26% {
+        left: 39%;
+        background: #5fae7e
+      }
+
+      31% {
+        left: 41%;
+        background: #e0564a
+      }
+
+      62% {
+        left: 41%;
+        background: #e0564a
+      }
+
+      68% {
+        left: 45%;
+        background: #5fae7e
+      }
+
+      100% {
+        left: 106%;
+        background: #5fae7e
+      }
+    }
+
+    @keyframes tStopGoH2 {
+      0% {
+        left: -4%;
+        background: #5fae7e
+      }
+
+      28% {
+        left: 34%;
+        background: #5fae7e
+      }
+
+      34% {
+        left: 36.5%;
+        background: #e0564a
+      }
+
+      64% {
+        left: 36.5%;
+        background: #e0564a
+      }
+
+      71% {
+        left: 42%;
+        background: #5fae7e
+      }
+
+      100% {
+        left: 106%;
+        background: #5fae7e
+      }
+    }
+
+    @keyframes tStopGoH3 {
+      0% {
+        left: -4%;
+        background: #5fae7e
+      }
+
+      30% {
+        left: 29%;
+        background: #5fae7e
+      }
+
+      37% {
+        left: 32%;
+        background: #e0564a
+      }
+
+      66% {
+        left: 32%;
+        background: #e0564a
+      }
+
+      74% {
+        left: 39%;
+        background: #5fae7e
+      }
+
+      100% {
+        left: 106%;
+        background: #5fae7e
+      }
+    }
+
+    @keyframes tFlowH {
+      0% {
+        left: -4%;
+        background: #5fae7e
+      }
+
+      100% {
+        left: 106%;
+        background: #5fae7e
+      }
+    }
+
+    @keyframes tFlowV {
+      0% {
+        top: -8%;
+        background: #5fae7e
+      }
+
+      100% {
+        top: 106%;
+        background: #5fae7e
+      }
+    }
+
+    /* mini signal gates on the crossing */
+    .t-gate {
+      position: absolute;
+      z-index: 1;
+      border-radius: 1px
+    }
+
+    .t-gate.h {
+      left: calc(50% - 11px);
+      top: calc(50% - 8px);
+      width: 2px;
+      height: 16px
+    }
+
+    .t-gate.v {
+      top: calc(50% - 11px);
+      left: calc(50% - 8px);
+      width: 16px;
+      height: 2px
+    }
+
+    .t-gate.g {
+      background: #5fae7e;
+      box-shadow: 0 0 5px rgba(95, 174, 126, .8)
+    }
+
+    .t-gate.r {
+      background: #e0564a;
+      box-shadow: 0 0 5px rgba(224, 86, 74, .8)
+    }
+
+    /* mini topbar — mirrors the real app's transport row */
+    .t-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap
+    }
+
+    .t-loc b {
+      font-size: 12px;
+      font-weight: 600;
+      display: block;
+      line-height: 1.25
+    }
+
+    .t-loc small {
+      font-size: 9.5px;
+      color: var(--faint)
+    }
+
+    .t-chip {
+      font-size: 9px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: var(--bg2);
+      white-space: nowrap
+    }
+
+    .t-chip b {
+      color: var(--amber);
+      font-weight: 500
+    }
+
+    .t-transport {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .t-tbtn {
+      width: 27px;
+      height: 27px;
+      border-radius: 7px;
+      border: 1px solid var(--line2);
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      color: var(--text);
+      transition: all .3s
+    }
+
+    #t-play.on {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: #1a1205
+    }
+
+    .t-time {
+      font-size: 10px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 5px 9px
+    }
+
+    .t-spd {
+      display: flex;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden
+    }
+
+    .t-spd b {
+      font-weight: 400;
+      font-size: 9.5px;
+      padding: 5px 7px;
+      color: var(--faint)
+    }
+
+    .t-spd b.act {
+      background: var(--bg2);
+      color: var(--text)
+    }
+
+    .t-phase {
+      position: absolute;
+      left: 12px;
+      bottom: 10px;
+      z-index: 2;
+      font-size: 9.5px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 3px 8px;
+      background: rgba(11, 13, 14, .8)
+    }
+
+    .t-dock {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1.35fr .9fr .9fr;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding: 14px 12px 10px;
+      opacity: .45;
+      transition: opacity .6s
+    }
+
+    .t-anal {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 8.5px;
+      letter-spacing: .12em;
+      color: var(--muted);
+      border: 1px solid var(--line2);
+      border-radius: 999px;
+      padding: 3px 12px;
+      background: var(--bg2)
+    }
+
+    .tour.analytics .t-dock {
+      opacity: 1
+    }
+
+    .t-dock table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5px;
+      background: #101315;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      overflow: hidden
+    }
+
+    .t-dock th,
+    .t-dock td {
+      text-align: right;
+      padding: 5px 8px;
+      color: var(--muted);
+      font-weight: 400
+    }
+
+    .t-dock th:first-child,
+    .t-dock td:first-child {
+      text-align: left;
+      color: var(--text)
+    }
+
+    .t-dock thead th {
+      color: var(--faint);
+      border-bottom: 1px solid var(--line);
+      font-size: 8.5px;
+      letter-spacing: .07em;
+      text-transform: uppercase
+    }
+
+    .t-delta td {
+      color: #3ecf8e;
+      border-top: 1px solid var(--line)
+    }
+
+    .t-delta td:first-child {
+      color: #3ecf8e
+    }
+
+    .t-chartcard {
+      background: #101315;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column
+    }
+
+    .t-chead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 8px;
+      letter-spacing: .08em;
+      color: var(--faint);
+      margin-bottom: 6px
+    }
+
+    .t-leg {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap
+    }
+
+    .t-leg i {
+      width: 9px;
+      height: 2px;
+      border-radius: 1px;
+      display: inline-block
+    }
+
+    .t-leg .lf {
+      background: #8b9096
+    }
+
+    .t-leg .lr {
+      background: var(--amber)
+    }
+
+    .t-chart {
+      width: 100%;
+      flex: 1;
+      min-height: 42px;
+      display: block
+    }
+
+    .t-chart path {
+      fill: none;
+      stroke-width: 1.6;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100
+    }
+
+    .tc-fx {
+      stroke: #8b9096
+    }
+
+    .tc-rl {
+      stroke: var(--amber)
+    }
+
+    .tour.analytics .t-chart path {
+      transition: stroke-dashoffset 1.8s ease;
+      stroke-dashoffset: 0
+    }
+
+    .t-cursor {
+      position: absolute;
+      z-index: 5;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--amber);
+      background: rgba(217, 161, 59, .18);
+      left: 40%;
+      top: 40%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: left .9s cubic-bezier(.4, 0, .2, 1), top .9s cubic-bezier(.4, 0, .2, 1)
+    }
+
+    .t-cursor.click {
+      animation: tClick .5s ease
+    }
+
+    @keyframes tClick {
+      30% {
+        transform: translate(-50%, -50%) scale(.55)
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(1)
+      }
+    }
+
+    .demo-foot {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      flex-wrap: wrap
+    }
+
+    /* live demo fits a single viewport: tag + heading + full tour + button */
+    #demo {
+      padding: 32px 0
+    }
+
+    #demo .sec-tag {
+      margin-bottom: 10px
+    }
+
+    #demo h2 {
+      max-width: none;
+      margin-bottom: 0
+    }
+
+    #demo .tour {
+      margin-top: 18px
+    }
+
+    .demo-checks {
+      display: flex;
+      flex-direction: column;
+      gap: 9px
+    }
+
+    .demo-checks div {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--muted)
+    }
+
+    .demo-checks div::before {
+      content: '·';
+      color: var(--amber);
+      margin-right: 9px;
+      font-weight: 700
+    }
+
+    /* feature grid */
+    #built .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-top: 56px
+    }
+
+    .feat {
+      background: var(--bg);
+      padding: 36px;
+      position: relative;
+      overflow: hidden;
+      transition: background .3s
+    }
+
+    .feat:hover {
+      background: #0e1113
+    }
+
+    .feat h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 11px
+    }
+
+    .feat h3::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--amber);
+      flex-shrink: 0;
+      transition: transform .3s
+    }
+
+    .feat:hover h3::before {
+      transform: scale(1.6)
+    }
+
+    .feat p {
+      color: var(--muted);
+      font-size: 14.5px
+    }
+
+    /* tech strip */
+    .tech-strip {
+      margin-top: 64px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px
+    }
+
+    .tech-strip span {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 16px;
+      transition: color .25s, border-color .25s, transform .25s;
+      cursor: default
+    }
+
+    .tech-strip span:hover {
+      color: var(--amber);
+      border-color: var(--amber);
+      transform: translateY(-2px)
+    }
+
+    /* final cta */
+    #cta {
+      text-align: center;
+      padding: 130px 0
+    }
+
+    #cta h2 {
+      margin: 0 auto 18px
+    }
+
+    #cta .sec-sub {
+      margin: 0 auto 40px
+    }
+
+    /* footer */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 34px 0
+    }
+
+    .foot-inner {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap
+    }
+
+    .foot-inner .brand {
+      font-size: 14px
+    }
+
+    .foot-inner p {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--faint);
+      margin-left: auto
+    }
+
+    @media (max-width:860px) {
+      .nav-burger {
+        display: flex
+      }
+
+      nav.menu-open {
+        background: rgba(11, 13, 14, .97)
+      }
+
+      .nav-links {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        gap: 4px;
+        margin: 0;
+        padding: 10px clamp(28px, 3.5vw, 68px) 18px;
+        background: rgba(11, 13, 14, .96);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--line);
+        opacity: 0;
+        transform: translateY(-6px);
+        pointer-events: none;
+        transition: opacity .25s, transform .25s;
+      }
+
+      .nav-links a {
+        padding: 10px 0;
+        font-size: 15px;
+      }
+
+      .nav-links.open {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+
+      nav .btn {
+        margin-left: auto
+      }
+
+      .step {
+        grid-template-columns: 48px 1fr;
+        gap: 18px
+      }
+
+      .step p {
+        grid-column: 2
+      }
+
+      #results .stat-grid {
+        grid-template-columns: 1fr
+      }
+
+      /* the tour keeps its desktop layout at every width — on phones the
+         whole thing is scaled down to fit by the fitTour() script */
+
+      #built .feat-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media (max-width:640px) {
+      .wrap {
+        padding: 0 20px
+      }
+
+      section {
+        padding: 72px 0
+      }
+
+      .nav-inner {
+        height: 60px
+      }
+
+      .hero-cta {
+        gap: 10px
+      }
+
+      .hero-stats {
+        gap: 28px;
+        margin-top: 32px
+      }
+
+      .hero-stats b {
+        font-size: 24px
+      }
+
+      .stat {
+        padding: 30px 24px
+      }
+
+      .rchart {
+        padding: 24px 16px
+      }
+
+      .rchart h4 {
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-start
+      }
+
+      .cbar {
+        grid-template-columns: 70px 1fr 76px;
+        gap: 10px
+      }
+
+      .step {
+        padding: 32px 0
+      }
+
+      .feat {
+        padding: 26px 20px
+      }
+
+      .tech-strip {
+        margin-top: 42px
+      }
+
+      #cta {
+        padding: 90px 0
+      }
+
+      .foot-inner p {
+        margin-left: 0;
+        width: 100%
+      }
+
+      .scroll-hint {
+        display: none
+      }
+    }
+
+    /* ── phone hero (user's plan) ────────────────────────────
+       No kicker, no subhead, headline tight under the nav; the road
+       runs down the RIGHT side so cars flow beside the text, not
+       behind it. Late in the sheet on purpose: the base .hero-content
+       and h1 rules above would override an earlier media block. */
+    @media (max-width:700px) {
+      .nav-inner {
+        position: relative;
+        padding: 0 16px;
+      }
+
+      nav .btn:not(.nav-mobile-btn) {
+        display: none !important;
+      }
+
+      .brand {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .nav-burger {
+        margin-left: auto;
+      }
+
+      .nav-mobile-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+        height: 32px !important;
+        border-radius: 6px !important;
+        transform: none !important;
+        margin-left: 0 !important;
+        box-shadow: none !important;
+      }
+
+      .nav-mobile-btn:hover {
+        box-shadow: none !important;
+      }
+
+
+      .kicker {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        margin-top: -20px;
+        margin-bottom: 36px;
+        transform: none;
+      }
+
+      .hero-sub {
+        display: none !important;
+      }
+
+      /* no hero buttons on phone — the nav's "Try it live" covers it,
+         the junction is the whole show */
+      .hero-cta {
+        display: none;
+      }
+
+      body>header {
+        align-items: flex-start;
+      }
+
+      /* no text shield on phones — the title sits directly on the junction */
+      .hero-overlay-left {
+        display: none;
+      }
+
+      .hero-content {
+        position: absolute;
+        inset: 0;
+        padding: 92px 16px 40px;
+        box-sizing: border-box;
+      }
+
+      h1 {
+        /* 24px on a 375px phone, grows with the viewport so the in-between
+           widths (landscape phones, small tablets) don't get a lost headline */
+        font-size: clamp(24px, 6.4vw, 38px);
+        line-height: 1.2;
+        margin-bottom: 12px;
+        max-width: 14ch;
+      }
+
+      .scroll-hint {
+        display: none;
+      }
+
+      h1 .ln,
+      h1 .ln span {
+        height: auto !important;
+        line-height: inherit !important;
+      }
+
+      h1 .ln:nth-child(1),
+      h1 .ln:nth-child(2) {
+        transform: none;
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important
+      }
+
+      .rv {
+        opacity: 1;
+        transform: none
+      }
+
+      h1 .ln span {
+        transform: none;
+        animation: none
+      }
+
+      .hero-sub,
+      .hero-cta,
+      .scroll-hint {
+        opacity: 1;
+        animation: none
+      }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+
+<body>
+  <canvas id="bg-dots"></canvas>
+
+  <nav id="nav">
+    <div class="nav-inner">
+      <a class="nav-mobile-btn btn btn-solid" href="app.html">Try Live</a>
+      <a class="brand" href="#">TRAF<i>FIX</i></a>
+      <div class="nav-links" id="nav-links">
+        <a href="#results">Results</a>
+        <a href="#how">How it works</a>
+        <a href="#demo">Demo</a>
+        <a href="#built">Engineering</a>
+      </div>
+      <a class="btn btn-solid" href="app.html">Try it live <span class="ar">→</span></a>
+      <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <header>
+    <canvas id="sim"></canvas>
+    <div class="hero-fade"></div>
+    <div class="hero-overlay-left"></div>
+    <div class="wrap hero-content">
+      <p class="kicker">fixing urban traffic</p>
+      <h1>
+        <span class="ln"><span>Traffic Lights</span></span>
+        <span class="ln"><span>that learn.</span></span>
+      </h1>
+      <p class="hero-sub">Real-time adaptive signal control powered by lightweight reinforcement learning.</p>
+      <div class="hero-cta">
+        <a class="btn btn-solid" href="app.html">Try it live <span class="ar">→</span></a>
+        <a class="btn btn-line" href="#how">How it works</a>
+      </div>
+    </div>
+    <div class="sim-hud" id="sim-hud" aria-hidden="true">
+      <div class="hud-modes-stack">
+        <div class="hud-mode-option active" id="opt-fixed">
+          <span class="hud-status-light"></span>
+          <span class="hud-mode-name">Fixed control</span>
+        </div>
+        <div class="hud-mode-option" id="opt-rl">
+          <span class="hud-status-light"></span>
+          <span class="hud-mode-name">RL control</span>
+        </div>
+      </div>
+      <div class="hud-term" id="term"></div>
+      <button class="hud-inject" id="btn-inject">▸ inject traffic</button>
+      <div class="hud-hint">card: switch controller · road: drop a car</div>
+    </div>
+    <div class="scroll-hint">SCROLL</div>
+  </header>
+
+  <section id="results">
+    <div class="wrap">
+      <p class="sec-tag rv">Results</p>
+      <h2 class="rv">Measured against the controllers cities actually run.</h2>
+      <p class="sec-sub rv d1">Evaluated in SUMO on a real signalized junction, against
+        the junction's own fixed-time program and a vehicle-actuated controller —
+        identical demand, identical random seeds.</p>
+      <div class="stat-grid">
+        <div class="stat rv">
+          <div class="num"><em>−</em><span class="count" data-to="60">0</span><em>%</em></div>
+          <div class="lbl">average delay vs. <b>fixed-time</b> control</div>
+        </div>
+        <div class="stat rv d1">
+          <div class="num"><em>−</em><span class="count" data-to="25">0</span><em>%</em></div>
+          <div class="lbl">average delay vs. <b>vehicle-actuated</b> control</div>
+        </div>
+        <div class="stat rv d2">
+          <div class="num"><span class="count" data-to="0">0</span> <em style="font-size:.55em">GPU</em></div>
+          <div class="lbl">a <b>tabular policy</b> decides in microseconds — no neural network at inference, no special
+            hardware</div>
+        </div>
+      </div>
+      <div class="rchart rv d1">
+        <h4>Average delay <span>indexed · fixed-time = 100 · lower is better</span></h4>
+        <div class="cbar"><span class="clbl">Fixed-time</span>
+          <div class="ctrack">
+            <div class="cfill" data-w="100"></div>
+          </div><span class="cval">100</span>
+        </div>
+        <div class="cbar"><span class="clbl">Actuated</span>
+          <div class="ctrack">
+            <div class="cfill" data-w="53"></div>
+          </div><span class="cval">53</span>
+        </div>
+        <div class="cbar hl"><span class="clbl">Traffix</span>
+          <div class="ctrack">
+            <div class="cfill" data-w="40"></div>
+          </div><span class="cval">40 · −60%</span>
+        </div>
+      </div>
+      <p class="note rv">Same routes, same seeds, both directions of comparison. Queue lengths and throughput are
+        measured live in the demo — run it on your own demand pattern.</p>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <p class="sec-tag rv">How it works</p>
+      <h2 class="rv">Three ideas, deliberately simple.</h2>
+      <p class="sec-sub rv d1">Most RL traffic controllers need a GPU and a leap of faith.
+        Traffix was designed backwards from what a traffic engineer would deploy.</p>
+      <div class="steps">
+        <div class="step rv">
+          <span class="no">01</span>
+          <div>
+            <h3>State reduction</h3>
+            <p class="tagline">thousands of raw signals → one compact state</p>
+          </div>
+          <p>Instead of feeding the agent raw camera or detector streams, Traffix
+            compresses each approach into a small discrete state — queue levels per
+            approach, current phase, demand level. The state space stays small enough
+            to learn fully and to inspect by hand.</p>
+        </div>
+        <div class="step rv">
+          <span class="no">02</span>
+          <div>
+            <h3>Tabular Q-learning</h3>
+            <p class="tagline">a lookup table, not a black box</p>
+          </div>
+          <p>The policy is a Q-table over that reduced state. Training is cheap,
+            inference is a table lookup, and every decision the controller can ever
+            make can be audited line by line. That's how it outperforms heavier
+            methods without their compute bill.</p>
+        </div>
+        <div class="step rv">
+          <span class="no">03</span>
+          <div>
+            <h3>Hybrid safety layer</h3>
+            <p class="tagline">the agent proposes, the safety layer disposes</p>
+          </div>
+          <p>A rule-based layer wraps the learned policy: minimum green of 5 s, a
+            must-switch cap of 30 s so no approach starves, and a guaranteed 3 s
+            yellow on every change. Even an untrained agent can't produce an unsafe
+            signal sequence.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="wrap">
+      <p class="sec-tag rv">Live demo</p>
+      <h2 class="rv">Don't take the numbers — watch them happen.</h2>
+      <div class="tour rv d1" id="tour" aria-hidden="true">
+        <div class="tour-chrome">
+          <i></i><i></i><i></i>
+          <span class="mono">traffix — live comparison</span>
+          <div class="tour-steps">
+            <b class="ts">1 · set demand</b><b class="ts">2 · run</b><b class="ts">3 · compare</b>
+          </div>
+        </div>
+        <div class="tour-body">
+          <div class="t-rail">
+            <span class="t-logo mono">t<i>f</i></span>
+            <span class="t-ric act">◧</span><span class="t-ric">⚙</span><span class="t-ric">⛶</span>
+          </div>
+          <aside class="t-side">
+            <h5 class="mono">SCENARIO BUILDER</h5>
+            <div class="t-app">
+              <header><b>North approach</b><span class="mono">4 lanes</span></header>
+              <div class="t-row"><label>Left</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+              <div class="t-row"><label>Straight</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+              <div class="t-row"><label>Right</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+            </div>
+            <div class="t-app">
+              <header><b>East approach</b><span class="mono">4 lanes</span></header>
+              <div class="t-row"><label>Left</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+              <div class="t-row"><label>Straight</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+              <div class="t-row"><label>Right</label>
+                <div class="t-slider"><i></i></div><output class="mono">100 v/h</output>
+              </div>
+            </div>
+            <div class="t-presets">
+              <span class="tp" id="tp-target">N + S heavy</span><span class="tp">Off-peak</span>
+            </div>
+            <div class="t-kv"><label>SUMO seed</label><span class="mono">12356</span></div>
+            <div class="t-kv"><label>Q-table</label><span class="mono">demo policy</span></div>
+            <div class="t-deploy mono" id="t-deploy">Deploy scenario ▸</div>
+          </aside>
+          <div class="t-main">
+            <div class="t-top">
+              <span class="t-loc"><b>Live comparison</b><small class="mono">fixed-time vs RL · same seed</small></span>
+              <span class="t-chip mono">Q coverage <b id="t-cov">0%</b></span>
+              <div class="t-transport">
+                <span class="t-tbtn">↺</span>
+                <span class="t-tbtn" id="t-play">▶</span>
+                <span class="t-time mono" id="t-time">0 / 1000 s</span>
+                <span class="t-spd mono"><b class="act">1×</b><b>4×</b><b>10×</b><b>30×</b></span>
+              </div>
+            </div>
+            <div class="t-vps">
+              <div class="t-vp">
+                <span class="t-tag mono">FIXED-TIME</span>
+                <div class="t-road"></div>
+                <div class="t-road v"></div>
+                <span class="t-gate h r"></span>
+                <span class="t-gate v g"></span>
+                <span class="t-car h sg"></span>
+                <span class="t-car h sg2"></span>
+                <span class="t-car h sg3"></span>
+                <span class="t-car h sg" style="animation-delay:3.4s"></span>
+                <span class="t-car v dn" style="animation-delay:.7s"></span>
+                <span class="t-car v dn" style="animation-delay:3.1s"></span>
+                <span class="t-phase mono">phase 0 · 28 s</span>
+              </div>
+              <div class="t-vp">
+                <span class="t-tag t-amber mono">TRAFFIX RL</span>
+                <div class="t-road"></div>
+                <div class="t-road v"></div>
+                <span class="t-gate h g"></span>
+                <span class="t-gate v r"></span>
+                <span class="t-car h fl" style="animation-delay:0s"></span>
+                <span class="t-car h fl" style="animation-delay:1.5s"></span>
+                <span class="t-car h fl" style="animation-delay:3s"></span>
+                <span class="t-phase mono">phase 3 · 2 s · a=1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="t-dock">
+          <span class="t-anal mono">▾ ANALYTICS</span>
+          <table class="mono">
+            <thead>
+              <tr>
+                <th></th>
+                <th>avg wait</th>
+                <th>avg travel</th>
+                <th>thruput</th>
+                <th>queue</th>
+                <th>max q</th>
+                <th>waiting</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fixed</td>
+                <td id="tm-fw">—</td>
+                <td id="tm-fv">—</td>
+                <td id="tm-ft">—</td>
+                <td id="tm-fq">—</td>
+                <td id="tm-fm">—</td>
+                <td id="tm-fn">—</td>
+              </tr>
+              <tr>
+                <td>RL</td>
+                <td id="tm-rw">—</td>
+                <td id="tm-rv">—</td>
+                <td id="tm-rt">—</td>
+                <td id="tm-rq">—</td>
+                <td id="tm-rm">—</td>
+                <td id="tm-rn">—</td>
+              </tr>
+              <tr class="t-delta">
+                <td>Δ</td>
+                <td>+1.0s</td>
+                <td>+0.3s</td>
+                <td>+3</td>
+                <td>+14</td>
+                <td>+0</td>
+                <td>+3</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="t-chartcard">
+            <div class="t-chead mono"><span>TOTAL QUEUE OVER TIME</span><span class="t-leg"><i class="lf"></i>FIXED <i
+                  class="lr"></i>RL</span></div>
+            <svg class="t-chart" viewBox="0 0 200 40" preserveAspectRatio="none">
+              <path class="tc-fx" d="M0,34 C25,32 45,26 70,19 S130,7 200,5" pathLength="100" />
+              <path class="tc-rl" d="M0,34 C25,33 45,31 70,29 S130,27 200,28" pathLength="100" />
+            </svg>
+          </div>
+          <div class="t-chartcard">
+            <div class="t-chead mono"><span>MEAN WAIT PRESENT</span><span class="t-leg"><i class="lf"></i>FIXED <i
+                  class="lr"></i>RL</span></div>
+            <svg class="t-chart" viewBox="0 0 200 40" preserveAspectRatio="none">
+              <path class="tc-fx" d="M0,36 C30,34 60,28 90,21 S150,9 200,7" pathLength="100" />
+              <path class="tc-rl" d="M0,36 C30,35 60,33 90,31 S150,30 200,30" pathLength="100" />
+            </svg>
+          </div>
+        </div>
+        <div class="t-cursor" id="t-cursor"></div>
+      </div>
+      <div class="demo-foot rv d2">
+        <a class="btn btn-solid" href="app.html">Launch the real demo <span class="ar">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="built">
+    <div class="wrap">
+      <p class="sec-tag rv">Engineering</p>
+      <h2 class="rv">Built like a product, not a notebook.</h2>
+      <div class="feat-grid">
+        <div class="feat rv">
+          <h3>Faithful evaluation loop</h3>
+          <p>The demo backend drives SUMO through TraCI with the exact state
+            definition, action set, timing constants and metric equations used in
+            evaluation — no re-implementation drift between paper and product.</p>
+        </div>
+        <div class="feat rv d1">
+          <h3>Honest by construction</h3>
+          <p>Both controllers always receive the same routes file and the same
+            random seed. Q-table coverage of the visited states is reported live,
+            including when it's low.</p>
+        </div>
+        <div class="feat rv">
+          <h3>Runs anywhere</h3>
+          <p>SUMO installs from pip, the whole stack ships as one Docker image,
+            and the browser only renders frames — so the demo stays smooth on any
+            laptop and deploys to any host.</p>
+        </div>
+        <div class="feat rv d1">
+          <h3>Configurable, not hard-coded</h3>
+          <p>Every experiment constant — junction id, approach lanes, phase indices,
+            timing, seeds — lives in one config module and can be overridden by
+            environment variables to target a different junction.</p>
+        </div>
+      </div>
+      <div class="tech-strip rv d1">
+        <span>Python</span><span>SUMO / TraCI</span><span>Q-learning</span>
+        <span>FastAPI</span><span>WebSocket</span><span>Canvas 2D</span><span>Docker</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="cta">
+    <div class="wrap">
+      <p class="sec-tag rv">Two minutes</p>
+      <h2 class="rv">See a signal think.</h2>
+      <p class="sec-sub rv d1">Pick a demand pattern, press play, and watch the
+        learned controller pull ahead of the timer it replaces.</p>
+      <a class="btn btn-solid rv d2" style="font-size:16px;padding:14px 28px" href="app.html">Try it live <span
+          class="ar">→</span></a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="brand">TRAF<i>FIX</i></span>
+      <p>adaptive signal control · reinforcement learning · SUMO</p>
+    </div>
+  </footer>
+
+  <script>
+    "use strict";
+
+    /* ── nav state ── */
+    const nav = document.getElementById('nav');
+    addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 24), { passive: true });
+
+    /* ── mobile menu ── */
+    const burger = document.getElementById('nav-burger');
+    if (burger) {
+      const navLinks = document.getElementById('nav-links');
+      const setMenu = open => {
+        nav.classList.toggle('menu-open', open);
+        navLinks.classList.toggle('open', open);
+        burger.setAttribute('aria-expanded', open);
+        burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      };
+      burger.addEventListener('click', () => setMenu(!nav.classList.contains('menu-open')));
+      document.querySelectorAll('.nav-links a').forEach(a =>
+        a.addEventListener('click', () => setMenu(false)));
+    }
+
+    /* ── scroll reveal ── */
+    const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const useGsap = !!window.gsap && !REDUCED;
+    if (useGsap) {
+      document.body.classList.add('gsap-active');
+    } else {
+      const io = new IntersectionObserver(es => es.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      }), { threshold: .18, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.rv').forEach(el => io.observe(el));
+    }
+
+    /* ── stat counters ── */
+    const cio = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      cio.unobserve(e.target);
+      const el = e.target, to = +el.dataset.to, t0 = performance.now();
+      if (to === 0) return;
+      (function tick(t) {
+        const p = Math.min((t - t0) / 1400, 1);
+        el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(tick);
+      })(t0);
+    }), { threshold: .6 });
+    document.querySelectorAll('.count').forEach(el => cio.observe(el));
+
+    /* ── chart bars grow on reveal ── */
+    const bio = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      bio.unobserve(e.target);
+      e.target.querySelectorAll('.cfill').forEach(f => { f.style.width = f.dataset.w + '%'; });
+    }), { threshold: .4 });
+    document.querySelectorAll('.rchart').forEach(el => bio.observe(el));
+
+    /* ── cursor-tracking highlight on cards ── */
+    document.querySelectorAll('.stat, .feat').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
+
+    /* ── hero parallax: content drifts and fades as you scroll past ── */
+    if (!useGsap && !REDUCED) {
+      const hc = document.querySelector('.hero-content');
+      const hh = document.querySelector('.sim-hud');
+      addEventListener('scroll', () => {
+        const y = scrollY;
+        if (y > innerHeight) return;
+        hc.style.transform = 'translateY(' + (y * .22) + 'px)';
+        hc.style.opacity = Math.max(0, 1 - y / (innerHeight * .8));
+        if (hh && y > 0) {
+          hh.style.animation = 'none';  // entrance animation's fill would override inline opacity
+          hh.style.opacity = Math.max(0, 1 - y / (innerHeight * .5));
+        }
+      }, { passive: true });
+    }
+
+    /* ── scrollspy: amber on the section you're in ── */
+    (function spy() {
+      const links = [...document.querySelectorAll('.nav-links a')];
+      const secs = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+      function update() {
+        let cur = null;
+        for (const s of secs) if (s.getBoundingClientRect().top <= innerHeight * .4) cur = s;
+        links.forEach(a => a.classList.toggle('active', cur && a.getAttribute('href') === '#' + cur.id));
+      }
+      addEventListener('scroll', update, { passive: true }); update();
+    })();
+
+    /* ── demo walkthrough: 1 set demand → 2 run → 3 compare ── */
+    (function tour() {
+      const root = document.getElementById('tour');
+      if (!root) return;
+      const cur = document.getElementById('t-cursor');
+      const steps = [...root.querySelectorAll('.ts')];
+      const sliders = [...root.querySelectorAll('.t-slider i')];
+      const outs = [...root.querySelectorAll('.t-row output')];
+      const preset = document.getElementById('tp-target');
+      const play = document.getElementById('t-play');
+      const time = document.getElementById('t-time');
+      // per-movement targets: North L/S/R then East L/S/R (matches the app's cards)
+      const WID = [10, 78, 9, 7, 36, 7], VAL = [55, 600, 50, 30, 260, 30];
+      let timers = [], clock = null, sec = 0;
+      const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+      function place(el) {
+        const r = el.getBoundingClientRect(), b = root.getBoundingClientRect();
+        // rects are post-transform; the cursor lives in pre-transform
+        // coordinates, so divide the scale back out (1 when not scaled)
+        const s = (b.width / root.offsetWidth) || 1;
+        cur.style.left = ((r.left - b.left + r.width / 2) / s) + 'px';
+        cur.style.top = ((r.top - b.top + r.height / 2) / s) + 'px';
+      }
+      function click() { cur.classList.add('click'); setTimeout(() => cur.classList.remove('click'), 500); }
+      function count(el, to, dur, suffix = '', dec = 0) {
+        if (typeof el === 'string') el = document.getElementById(el);
+        const t0 = performance.now();
+        (function f(t) {
+          const p = Math.min(1, (t - t0) / dur);
+          el.textContent = (to * (1 - Math.pow(1 - p, 3))).toFixed(dec) + suffix;
+          if (p < 1) requestAnimationFrame(f);
+        })(t0);
+      }
+      function setStep(n) {
+        steps.forEach((s, i) => s.classList.toggle('act', i === n));
+        root.dataset.step = n + 1;
+      }
+      function cycle() {
+        timers.forEach(clearTimeout); timers = [];
+        clearInterval(clock); sec = 0; time.textContent = '0 / 1000 s';
+        root.classList.remove('playing', 'analytics');
+        preset.classList.remove('on'); play.classList.remove('on');
+        sliders.forEach(s => s.style.width = '14%');
+        outs.forEach(o => o.textContent = '100 v/h');
+        document.getElementById('t-cov').textContent = '0%';
+        for (const id of ['tm-fw', 'tm-fv', 'tm-ft', 'tm-fq', 'tm-fm', 'tm-fn',
+          'tm-rw', 'tm-rv', 'tm-rt', 'tm-rq', 'tm-rm', 'tm-rn'])
+          document.getElementById(id).textContent = '—';
+        setStep(0);
+        at(300, () => place(preset));
+        at(1300, () => {
+          click(); preset.classList.add('on');
+          sliders.forEach((s, i) => s.style.width = WID[i] + '%');
+          outs.forEach((o, i) => count(o, VAL[i], 900, ' v/h'));
+        });
+        at(3600, () => { setStep(1); place(play); });
+        at(4600, () => {
+          click(); play.classList.add('on'); root.classList.add('playing');
+          count('t-cov', 96, 3600, '%');
+          clock = setInterval(() => { sec += 25; time.textContent = sec + ' / 1000 s'; }, 320);
+        });
+        at(8200, () => { setStep(2); place(root.querySelector('.t-delta td:last-child')); });
+        at(8700, () => {
+          root.classList.add('analytics');
+          count('tm-fw', 2.3, 900, 's', 1); count('tm-fv', 16.4, 900, 's', 1);
+          count('tm-ft', 8, 900); count('tm-fq', 35, 900);
+          count('tm-fm', 2, 900); count('tm-fn', 6, 900);
+          count('tm-rw', 1.3, 900, 's', 1); count('tm-rv', 16.1, 900, 's', 1);
+          count('tm-rt', 11, 900); count('tm-rq', 21, 900);
+          count('tm-rm', 2, 900); count('tm-rn', 3, 900);
+        });
+        at(13800, cycle);
+      }
+      const tio = new IntersectionObserver(es => {
+        if (es[0].isIntersecting) { cycle(); tio.unobserve(root); }
+      }, { threshold: .35 });
+      tio.observe(root);
+    })();
+
+    /* ── phone: the tour is the desktop UI scaled down to fit, like a
+       video — same layout as the real app instead of a restacked one.
+       transform: scale doesn't change layout height, so the leftover
+       space is reclaimed with a negative bottom margin. ── */
+    (function fitTour() {
+      const tour = document.getElementById('tour');
+      if (!tour) return;
+      const DESIGN = 780;                  // px width the tour is laid out at
+      function fit() {
+        if (innerWidth > 860) {
+          tour.style.width = tour.style.transform = '';
+          tour.style.transformOrigin = tour.style.marginBottom = '';
+          return;
+        }
+        const host = tour.parentElement;
+        const cs = getComputedStyle(host);
+        const avail = host.clientWidth -
+          parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        const s = avail / DESIGN;
+        tour.style.width = DESIGN + 'px';
+        tour.style.transformOrigin = 'top left';
+        tour.style.transform = 'scale(' + s + ')';
+        tour.style.marginBottom = '';
+        tour.style.marginBottom = (-tour.offsetHeight * (1 - s)) + 'px';
+      }
+      fit(); addEventListener('resize', fit);
+    })();
+
+    /* ── hero: living intersection ──────────────────────────
+       The same traffic is controlled alternately by a dumb
+       fixed-time program and by the RL policy. Queues pile up
+       under fixed control and drain when RL takes over; each
+       RL decision is flashed next to the junction. */
+    (function hero() {
+      const cv = document.getElementById('sim');
+      const hud = document.getElementById('sim-hud');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        cv.remove(); if (hud) hud.remove(); return;
+      }
+      const ctx = cv.getContext('2d');
+      let DPR = Math.min(devicePixelRatio || 1, 2);
+      let W = 0, H = 0, CX = 0, CY = 0;
+      let GLOWS = true;         // canvas shadows are too slow on phone GPUs
+      let ROAD = 72;            // half road width (both lanes) — the junction is the hero
+      let LANE = ROAD / 2;      // lane centre offset from road axis
+      let STOP = ROAD + 16;     // stop-line distance from centre
+
+      const DIRS = [
+        { axis: 'ew', dx: 1, dy: 0, off: LANE, rate: 4.4 },  // eastbound
+        { axis: 'ew', dx: -1, dy: 0, off: -LANE, rate: 4.9 },  // westbound
+        { axis: 'ns', dx: 0, dy: 1, off: -LANE, rate: 8.4 },  // southbound
+        { axis: 'ns', dx: 0, dy: -1, off: LANE, rate: 9.2 },  // northbound
+      ];
+
+      function resize() {
+        W = cv.clientWidth; H = cv.clientHeight;
+        // phones: fewer device pixels and no canvas shadow effects —
+        // both are the difference between 60fps and a slideshow
+        GLOWS = W >= 700;
+        DPR = Math.min(devicePixelRatio || 1, GLOWS ? 2 : 1.5);
+        cv.width = W * DPR; cv.height = H * DPR;
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+        ROAD = W < 700 ? 48 : 72; // less thick on mobile
+        LANE = ROAD / 2;
+        STOP = ROAD + 16;
+
+        // Update the offsets in DIRS dynamically
+        DIRS[0].off = LANE;
+        DIRS[1].off = -LANE;
+        DIRS[2].off = -LANE;
+        DIRS[3].off = LANE;
+
+        // desktop: junction owns the right-centre; mobile: the road hugs the
+        // right edge so cars flow BESIDE the text, junction in the lower half
+        CX = W * (W < 700 ? .68 : .66);
+        CY = H * (W < 700 ? .38 : .48);   // lower junction on desktop view, higher on mobile
+        const cssCY = H * (W < 700 ? .32 : .38); // keep headline layout unchanged
+        document.documentElement.style.setProperty('--cx', CX + 'px');
+        document.documentElement.style.setProperty('--cy', cssCY + 'px');
+        document.documentElement.style.setProperty('--road-half', ROAD + 'px');
+        measureHeadline();
+      }
+      /* cars fade out behind the headline — measured from the real text,
+         not hard-coded pixels, so it tracks any viewport / font size */
+      let h1Rect = null;
+      function measureHeadline() {
+        const el = document.querySelector('.hero-content h1');
+        if (!el) { h1Rect = null; return; }
+        const r = el.getBoundingClientRect();
+        // the text block reaches down to the CTA row on phones
+        let bottom = r.bottom;
+        const cta = document.querySelector('.hero-cta');
+        if (cta) bottom = Math.max(bottom, cta.getBoundingClientRect().bottom);
+        h1Rect = { right: r.right, bottom: bottom + scrollY };
+      }
+      resize(); addEventListener('resize', resize);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureHeadline);
+      addEventListener('load', measureHeadline);
+      /* alpha for anything drawn near the headline (mobile: the road runs
+         beside the text — only hide what actually crosses behind it) */
+      function heroAlpha(x, y) {
+        return 1;
+      }
+      function spawnDist(d) { return -(d.dx !== 0 ? (d.dx > 0 ? CX : W - CX) : (d.dy > 0 ? CY : H - CY)) - 40; }
+      function endDist(d) { return (d.dx !== 0 ? (d.dx > 0 ? W - CX : CX) : (d.dy > 0 ? H - CY : CY)) + 40; }
+      function pos(d, s) { return [CX + d.dx * s + (d.dy !== 0 ? d.off : 0), CY + d.dy * s + (d.dx !== 0 ? d.off : 0)]; }
+      function carPos(c, d) {
+        const sign = d.off > 0 ? 1 : -1;
+        const off = sign * (ROAD * 0.25 + ROAD * 0.5 * (c.laneIdx !== undefined ? c.laneIdx : 0));
+        return [
+          CX + d.dx * c.s + (d.dy !== 0 ? off : 0),
+          CY + d.dy * c.s + (d.dx !== 0 ? off : 0)
+        ];
+      }
+
+      const lanes = DIRS.map(d => ({ d, cars: [], cool: Math.random() * 2 }));
+      const VMAX = 52, ACC = 34, BRK = 90, GAP = 17, CAR_L = 13;
+      /* four silhouettes a reviewer can tell apart from above */
+      const TYPES = [
+        { type: 'car', len: 16, wid: 7.5, p: .49 },
+        { type: 'suv', len: 19, wid: 8.5, p: .72 },
+        { type: 'truck', len: 27, wid: 9, p: .85 },
+        { type: 'van', len: 23, wid: 8.5, p: .94 },
+        { type: 'police', len: 17, wid: 7.5, p: .97 },     // rare: flashing red/blue
+        { type: 'ambulance', len: 24, wid: 9, p: 1.1 },    // rare: white box, red cross
+      ];
+      function makeCar(s, v, dropped, laneIdx) {
+        const r = Math.random();
+        const t = TYPES.find(t => r < t.p) || TYPES[0];
+        const emergency = t.type === 'police' || t.type === 'ambulance';
+        const canTurn = !emergency && t.type !== 'truck';
+        const r2 = Math.random();
+        if (laneIdx === undefined) {
+          laneIdx = Math.floor(Math.random() * 2);
+        }
+        return {
+          s, v, wait: 0,
+          type: t.type, len: t.len, wid: t.wid,
+          shade: 195 + (Math.random() * 35 | 0),     // light grey body variations
+          turn: canTurn && r2 < .22 ? (r2 < .11 ? 'L' : 'R') : null,
+          beam: emergency || Math.random() < .25,    // emergencies always run beams
+          hazardT: dropped ? 3 : 0,                  // dropped cars blink hazards
+          brake: false,
+          laneIdx,
+          outLaneIdx: laneIdx,
+        };
+      }
+
+      /* ── signal controller ── */
+      const YEL = 1.6, ALLRED = .9;       // shared safety timing
+      const FIX_G = 8;                    // fixed program: equal green, blind to queues
+      const MIN_G = 3, MAX_G = 12;        // RL: min-green + must-switch caps
+      const MODE_SPAN = 14;               // seconds per controller before handover
+      let mode = 'FIXED', modeT = 0;
+      let axis = 'ew', sig = 'g', sigT = 0, evalT = 0, lastExtend = -9;
+      let gFade = 1;                      // green gates bloom in instead of snapping
+
+      const flashes = [];                 // {text, t} — RL decisions shown by the junction
+      function flash(text) { flashes.push({ text, t: 0 }); if (flashes.length > 4) flashes.shift(); }
+
+      function queued(ax) {
+        let n = 0;
+        for (const ln of lanes) if (ln.d.axis === ax)
+          for (const c of ln.cars) if (c.v < 4 && c.s < -STOP + 2) n++;
+        return n;
+      }
+      const AXN = { ns: 'N–S', ew: 'E–W' };
+
+      function stepSignal(dt) {
+        modeT += dt;
+        if (modeT >= MODE_SPAN) {
+          modeT = 0;
+          setMode(mode === 'FIXED' ? 'TRAFFIX' : 'FIXED');
+        }
+        sigT += dt;
+        if (sig === 'g') {
+          if (mode === 'FIXED') {
+            if (sigT >= FIX_G) { sig = 'y'; sigT = 0; }
+          } else {
+            evalT += dt;
+            if (sigT >= MIN_G && evalT >= .5) {
+              evalT = 0;
+              const other = axis === 'ns' ? 'ew' : 'ns';
+              const qCur = queued(axis), qOth = queued(other);
+              if (qOth > qCur + 2 || sigT >= MAX_G) {
+                sig = 'y'; sigT = 0;
+                flash('AI · green → ' + AXN[other]);
+                tlog('giving green to ' + AXN[other]);
+              } else if (qCur > 0 && sigT - lastExtend >= 4.5) {
+                lastExtend = sigT;
+                tlog('keeping ' + AXN[axis] + ' green');
+              }
+            }
+          }
+        } else if (sig === 'y') {
+          if (sigT >= YEL) { sig = 'r'; sigT = 0; }
+        } else { // all-red clearance
+          if (sigT >= ALLRED) {
+            const other = axis === 'ns' ? 'ew' : 'ns';
+            axis = (mode === 'FIXED') ? other
+              : (queued(other) >= queued(axis) ? other : axis);
+            sig = 'g'; sigT = 0; lastExtend = -9; gFade = 0;
+          }
+        }
+      }
+      function lightFor(ax) { return ax === axis && sig !== 'r' ? sig : 'r'; }
+
+      /* ── navbar car interaction logic ── */
+      const activeNavCars = [];
+      let navSpawnCool = 5 + Math.random() * 5;
+
+      function spawnNavbarCar(x, speed, canTurn = true) {
+        const navEl = document.getElementById('nav');
+        if (!navEl) return;
+
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        el.setAttribute('class', 'nav-car');
+        el.setAttribute('viewBox', '0 0 24 10');
+        el.setAttribute('fill', 'none');
+        el.style.position = 'absolute';
+        el.style.bottom = '-3.5px';
+        el.style.left = x + 'px';
+        el.style.width = '14px';
+        el.style.height = '6px';
+        el.style.zIndex = '60';
+        el.style.pointerEvents = 'none';
+
+        el.innerHTML = `
+          <path d="M18 5.5L24 4.5V6.5L18 5.5Z" fill="rgba(217, 161, 59, 0.4)" />
+          <path d="M2 6.5C2 6.5 3 6.5 3.5 4.5C4 2.5 5.5 2 8 2H12C14.5 2 15 3.5 15.5 4.5C16 5.5 18 6.5 18 6.5" stroke="var(--amber)" stroke-width="1.2" stroke-linecap="round"/>
+          <rect x="1" y="5.5" width="18" height="1.5" rx="0.75" fill="var(--amber)"/>
+          <circle cx="5.5" cy="7" r="1.2" fill="#0b0d0e" stroke="var(--amber)" stroke-width="1"/>
+          <circle cx="14.5" cy="7" r="1.2" fill="#0b0d0e" stroke="var(--amber)" stroke-width="1"/>
+        `;
+        navEl.appendChild(el);
+        activeNavCars.push({ el, x, speed, waiting: false, canTurn });
+      }
+
+      /* ── traffic ── */
+      let T = 0;                                 // wall-clock for pulse effects
+      function step(dt) {
+        T += dt;
+        gFade = Math.min(1, gFade + dt * 2.2);
+        stepSignal(dt);
+        for (const f of flashes) f.t += dt;
+        while (flashes.length && flashes[0].t > 2.2) flashes.shift();
+        for (const rp of ripples) rp.t += dt;
+        while (ripples.length && ripples[0].t > .8) ripples.shift();
+
+        // ── Spawn navbar cars (rarer on phones — the strip is short) ──
+        navSpawnCool -= dt;
+        if (navSpawnCool <= 0) {
+          const speed = 80 + Math.random() * 40;
+          const canTurn = Math.random() < 0.85; // 85% chance to turn down, 15% stay
+          spawnNavbarCar(-20, speed, canTurn);
+          navSpawnCool = W < 700 ? 32 + Math.random() * 22 : 15 + Math.random() * 15;
+        }
+
+        // ── Update active navbar cars ──
+        const turnX = CX - ROAD * 0.25;
+        const sEntry = 68 - CY;
+        for (let i = activeNavCars.length - 1; i >= 0; i--) {
+          const nc = activeNavCars[i];
+          if (!nc.waiting) {
+            nc.x += nc.speed * dt;
+            nc.el.style.left = nc.x + "px";
+            if (nc.canTurn && nc.x >= turnX) {
+              nc.x = turnX;
+              nc.el.style.left = nc.x + "px";
+              nc.waiting = true;
+            }
+          }
+          if (nc.waiting) {
+            let blocked = false;
+            for (const c of lanes[2].cars) {
+              if (c.laneIdx === 0 && Math.abs(c.s - sEntry) < GAP + 15) {
+                blocked = true;
+                break;
+              }
+            }
+            if (!blocked) {
+              nc.el.remove();
+              activeNavCars.splice(i, 1);
+              const car = makeCar(sEntry, VMAX * 0.75, false, 0);
+              const idx = lanes[2].cars.findIndex(c => c.s < sEntry);
+              if (idx === -1) lanes[2].cars.push(car);
+              else lanes[2].cars.splice(idx, 0, car);
+
+              const [px, py] = carPos(car, lanes[2].d);
+              ripples.push({ x: px, y: py, t: 0 });
+            }
+          }
+          if (nc.x > W + 40) {
+            nc.el.remove();
+            activeNavCars.splice(i, 1);
+          }
+        }
+
+        // ── Check Northbound lane exit to navbar ──
+        if (lanes[3].cars.length > 0) {
+          const lead = lanes[3].cars[0];
+          const sExit = CY - 68;
+          if (lead.s >= sExit && !lead.toNavChecked) {
+            lead.toNavChecked = true;
+            if (Math.random() < 0.45) { // 45% chance to turn onto navbar
+              lanes[3].cars.shift();
+              const speed = Math.max(50, lead.v * 1.5);
+              const sign = lanes[3].d.off > 0 ? 1 : -1;
+              const lead_out_offset = sign * (ROAD * 0.25 + ROAD * 0.5 * lead.outLaneIdx);
+              spawnNavbarCar(CX + lead_out_offset, speed, false);
+            }
+          }
+        }
+
+
+        for (const ln of lanes) {
+          const light = lightFor(ln.d.axis);
+          ln.cool -= dt;
+          if (ln.cool <= 0) {
+            const laneIdx = Math.floor(Math.random() * 2);
+            const isBlocked = ln.cars.some(c => c.laneIdx === laneIdx && c.s < spawnDist(ln.d) + GAP + 22);
+            if (!isBlocked) {
+              const car = makeCar(spawnDist(ln.d), VMAX * (.7 + Math.random() * .3), false, laneIdx);
+              ln.cars.push(car);
+              ln.cool = ln.d.rate * (.7 + Math.random() * .6);
+            } else {
+              ln.cool = .4;   // retry soon, but not every frame
+            }
+          }
+          for (let i = 0; i < ln.cars.length; i++) {
+            const c = ln.cars[i];
+            if (c.hazardT > 0) c.hazardT -= dt;
+            let limit = Infinity;
+            let lead = null;
+            for (let j = i - 1; j >= 0; j--) {
+              const prospective = ln.cars[j];
+              if (prospective.laneIdx === c.laneIdx) {
+                lead = prospective;
+                break;
+              }
+            }
+            if (lead) {
+              limit = lead.s - ((lead.len + c.len) / 2 + 8);
+            }
+            // hold the car's FRONT bumper a few px short of the light
+            if ((light !== 'g') && c.s < -STOP) limit = Math.min(limit, -STOP - 4 - c.len / 2);
+            const room = limit - c.s;
+            // smooth car-following: open road → full throttle (punchier from
+            // a standstill); near an obstacle the safe speed ramps down with
+            // the remaining gap, so braking eases in instead of slamming on
+            const vSafe = room === Infinity ? VMAX
+              : Math.max(0, Math.min(VMAX, (room - 1) * 2));
+            if (c.v < vSafe) {
+              c.v = Math.min(vSafe, c.v + ACC * (1.3 - .55 * c.v / VMAX) * dt);
+              c.brake = false;
+            } else {
+              c.v = Math.max(vSafe, c.v - BRK * dt);
+              c.brake = c.v > vSafe + 1;
+            }
+            if (c.v < 4) { c.wait += dt; c.brake = true; }
+            c.s += c.v * dt;
+          }
+          while (ln.cars.length && ln.cars[0].s > endDist(ln.d)) ln.cars.shift();
+        }
+      }
+
+      /* ── agent terminal: the policy thinks out loud ── */
+      const optFixed = document.getElementById('opt-fixed');
+      const optRl = document.getElementById('opt-rl');
+      const term = document.getElementById('term');
+      const tq = []; let typing = false;
+      function tlog(s) {
+        if (!term) return;
+        tq.push(s); if (tq.length > 6) tq.shift();
+        typeNext();
+      }
+      function typeNext() {
+        if (typing || !tq.length) return;
+        typing = true;
+        const line = document.createElement('div');
+        term.appendChild(line);
+        while (term.children.length > 5) term.firstChild.remove();
+        const s = tq.shift(); let i = 0;
+        (function tick() {
+          line.textContent = '▸ ' + s.slice(0, ++i);
+          if (i < s.length) setTimeout(tick, 14);
+          else { typing = false; typeNext(); }
+        })();
+      }
+      function setMode(m) {
+        mode = m;
+        const rl = m === 'TRAFFIX';
+        if (optFixed && optRl) {
+          optFixed.classList.toggle('active', !rl);
+          optRl.classList.toggle('active', rl);
+        }
+        flash(rl ? 'Traffix AI on' : 'fixed timer on');
+        tlog(rl ? 'Traffix AI took over' : 'old-school timer running');
+        if (rl) tlog('checking each road…');
+      }
+      if (hud) hud.addEventListener('click', () => {
+        modeT = 0;
+        setMode(mode === 'FIXED' ? 'TRAFFIX' : 'FIXED');
+      });
+
+      /* telemetry lines + a simple reward signal (queue drained per interval) */
+      let telT = 0, rewT = 0, qPrev = 0;
+      function telemetry(dt) {
+        telT += dt; rewT += dt;
+        const q = queued('ns') + queued('ew');
+        if (mode === 'TRAFFIX' && telT >= 4.2) {
+          telT = 0;
+          tlog('cars waiting · N–S ' + queued('ns') + ' · E–W ' + queued('ew'));
+        }
+        if (mode === 'TRAFFIX' && rewT >= 5.5) {
+          rewT = 0;
+          if (q < qPrev - 1) tlog('queues shrinking ✓');
+          else if (q > qPrev + 1) tlog('queues building…');
+          qPrev = q;
+        }
+        if (mode === 'FIXED') qPrev = q;
+      }
+
+      /* ── the wow button: flood the junction, let RL clean it up ── */
+      const inj = document.getElementById('btn-inject');
+      let injecting = false;
+      if (inj) inj.addEventListener('click', e => {
+        e.stopPropagation();                  // don't toggle the controller
+        if (injecting) return;
+        injecting = true;
+        modeT = -3;                           // hold fixed-time long enough to hurt
+        setMode('FIXED');
+        tlog('flooding the junction…');
+        let n = 0;
+        const iv = setInterval(() => {
+          if (++n > 16) {
+            clearInterval(iv);
+            setTimeout(() => {
+              tlog('jam building up');
+              modeT = 0;
+              setMode('TRAFFIX');
+              injecting = false;
+            }, 3200);
+            return;
+          }
+          const ln = lanes[Math.random() < .72 ? (Math.random() < .5 ? 0 : 1)
+            : (Math.random() < .5 ? 2 : 3)];
+          const s0 = spawnDist(ln.d) + 10;
+          const laneIdx = Math.floor(Math.random() * 2);
+          const isBlocked = ln.cars.some(c => c.laneIdx === laneIdx && Math.abs(c.s - s0) < 36);
+          if (!isBlocked) {
+            const car = makeCar(s0, VMAX * .6, false, laneIdx);
+            const idx = ln.cars.findIndex(c => c.s < s0);
+            if (idx === -1) ln.cars.push(car);
+            else ln.cars.splice(idx, 0, car);
+          }
+        }, 150);
+      });
+
+      /* ── pick & place: tap a road to drop a vehicle there ── */
+      const ripples = [];
+      cv.addEventListener('pointerdown', e => {
+        const r = cv.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        let best = null, bd = ROAD + 10;        // must hit a lane, not just the road
+        for (const ln of lanes) {
+          const d = ln.d;
+          const dist = d.dx !== 0 ? Math.abs(y - (CY + d.off)) : Math.abs(x - (CX + d.off));
+          if (dist < bd) { bd = dist; best = ln; }
+        }
+        if (!best) return;
+        const d = best.d;
+        const s = d.dx !== 0 ? (x - CX) * d.dx : (y - CY) * d.dy;
+        if (s > endDist(d) - 30 || s < spawnDist(d) + 10) return;
+        for (const c of best.cars) if (Math.abs(c.s - s) < GAP + 8) return;  // keep spacing
+        // Find which lane the click was closer to (2 lanes, centers at 18, 54)
+        const absOff = Math.abs(d.axis === 'ew' ? y - CY : x - CX);
+        const laneIdx = absOff < ROAD * 0.5 ? 0 : 1;
+        const car = makeCar(s, 0, true, laneIdx);
+
+        const i = best.cars.findIndex(c => c.s < s);   // array runs front → back
+        if (i === -1) best.cars.push(car); else best.cars.splice(i, 0, car);
+        const [px, py] = carPos(car, d);
+        ripples.push({ x: px, y: py, t: 0 });
+      });
+      /* crosshair only where it means something: over the roads */
+      cv.addEventListener('pointermove', e => {
+        const r = cv.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        cv.style.cursor =
+          (Math.abs(y - CY) < ROAD + 10 || Math.abs(x - CX) < ROAD + 10)
+            ? 'crosshair' : 'default';
+      });
+
+      /* ── render: a digital twin at night, not asphalt ── */
+      let lastTint = '';
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+
+
+
+        // road body — a clear channel
+        ctx.strokeStyle = 'rgba(255,255,255,.07)';
+        ctx.lineWidth = ROAD * 2;
+        ctx.beginPath(); ctx.moveTo(0, CY); ctx.lineTo(W, CY);
+        ctx.moveTo(CX, 0); ctx.lineTo(CX, H); ctx.stroke();
+
+        for (const ln of lanes) {
+          const { d } = ln;
+          let n = 0;
+          for (const c of ln.cars) if (c.s < -STOP + 2) n++;
+          const col = n < 4 ? '96,150,210' : n < 10 ? '217,161,59' : '224,118,58';
+          const a = Math.min(.13, .035 + n * .006);
+          const [x1, y1] = pos(d, spawnDist(d) + 20);
+          const [x2, y2] = pos(d, -STOP - 2);
+          ctx.strokeStyle = 'rgba(' + col + ',' + a + ')';
+          ctx.lineWidth = ROAD; ctx.lineCap = 'butt';
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        }
+
+        // Update text tint based on queue size in eastbound (lanes[0]).
+        // Only touch the custom property when the tint actually changes —
+        // setting it every frame forces a full style recalc per frame.
+        const getTint = (n) => {
+          if (n === 0) return '#a5abb6'; // original neutral gray
+          if (n < 4) return '#9fb2c0';  // subtle blue-gray
+          if (n < 10) return '#bdae9c';  // subtle gold-gray
+          return '#c2a59c';             // subtle rose-gray
+        };
+        let nEast = 0;
+        for (const c of lanes[0].cars) if (c.s < -STOP + 2) nEast++;
+        const tint = getTint(nEast);
+        if (tint !== lastTint) {
+          lastTint = tint;
+          document.documentElement.style.setProperty('--text-tint-2', tint);
+        }
+
+        // channel edges
+        ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (const o of [-ROAD, ROAD]) {
+          ctx.moveTo(0, CY + o); ctx.lineTo(CX - ROAD, CY + o);
+          ctx.moveTo(CX + ROAD, CY + o); ctx.lineTo(W, CY + o);
+          ctx.moveTo(CX + o, 0); ctx.lineTo(CX + o, CY - ROAD);
+          ctx.moveTo(CX + o, CY + ROAD); ctx.lineTo(CX + o, H);
+        }
+        ctx.stroke();
+        // centre dashes
+        ctx.strokeStyle = 'rgba(255,255,255,.10)';
+        ctx.setLineDash([6, 14]);
+        ctx.beginPath();
+        ctx.moveTo(0, CY); ctx.lineTo(CX - ROAD, CY); ctx.moveTo(CX + ROAD, CY); ctx.lineTo(W, CY);
+        ctx.moveTo(CX, 0); ctx.lineTo(CX, CY - ROAD); ctx.moveTo(CX, CY + ROAD); ctx.lineTo(CX, H);
+        ctx.stroke(); ctx.setLineDash([]);
+
+        // lane dividers (dashed lines for 2 lanes on each side)
+        ctx.strokeStyle = 'rgba(255,255,255,.05)';
+        ctx.setLineDash([3, 10]);
+        ctx.beginPath();
+
+        const halfRoad = ROAD * 0.5;
+        // Horizontal road lane dividers (left and right arms)
+        ctx.moveTo(0, CY + halfRoad); ctx.lineTo(CX - ROAD, CY + halfRoad);
+        ctx.moveTo(0, CY - halfRoad); ctx.lineTo(CX - ROAD, CY - halfRoad);
+        ctx.moveTo(CX + ROAD, CY + halfRoad); ctx.lineTo(W, CY + halfRoad);
+        ctx.moveTo(CX + ROAD, CY - halfRoad); ctx.lineTo(W, CY - halfRoad);
+
+        // Vertical road lane dividers (top and bottom arms)
+        ctx.moveTo(CX + halfRoad, 0); ctx.lineTo(CX + halfRoad, CY - ROAD);
+        ctx.moveTo(CX - halfRoad, 0); ctx.lineTo(CX - halfRoad, CY - ROAD);
+        ctx.moveTo(CX + halfRoad, CY + ROAD); ctx.lineTo(CX + halfRoad, H);
+        ctx.moveTo(CX - halfRoad, CY + ROAD); ctx.lineTo(CX - halfRoad, H);
+
+        ctx.stroke(); ctx.setLineDash([]);
+        // junction cell
+        ctx.strokeStyle = 'rgba(255,255,255,.17)'; ctx.lineWidth = 1;
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(CX - ROAD, CY - ROAD, ROAD * 2, ROAD * 2, 9);
+          ctx.stroke();
+        } else ctx.strokeRect(CX - ROAD, CY - ROAD, ROAD * 2, ROAD * 2);
+
+        // signals: glowing gates — green blooms in, yellow pulses, red burns steady
+        const cols = { g: '#5fae7e', y: '#d9a13b', r: '#b8584f' };
+        for (const ln of lanes) {
+          const { d } = ln, l = lightFor(d.axis);
+          const [sx, sy] = pos(d, -STOP);
+          const a = (l === 'g' ? .95 * gFade
+            : l === 'y' ? .55 + .35 * Math.sin(T * 7)
+              : .85) * heroAlpha(sx, sy);
+          if (a <= 0) continue;
+          ctx.save();
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          if (d.dx !== 0) { ctx.moveTo(sx, sy - LANE + 4); ctx.lineTo(sx, sy + LANE - 4); }
+          else { ctx.moveTo(sx - LANE + 4, sy); ctx.lineTo(sx + LANE - 4, sy); }
+          // bloom pass, then core (shadow blur only where the GPU can afford it)
+          ctx.strokeStyle = cols[l];
+          if (GLOWS) ctx.shadowColor = cols[l];
+          ctx.globalAlpha = a * .3; ctx.lineWidth = 7; if (GLOWS) ctx.shadowBlur = 18; ctx.stroke();
+          ctx.globalAlpha = a; ctx.lineWidth = 2.5; if (GLOWS) ctx.shadowBlur = 8; ctx.stroke();
+          ctx.restore();
+        }
+
+        // vehicles: top-down bodies with windshields, lights and indicators.
+        // Drawn in a local frame: +x is the direction of travel.
+        const HEAD = d => d.dx === 1 ? 0 : d.dx === -1 ? Math.PI : d.dy === 1 ? Math.PI / 2 : -Math.PI / 2;
+        function rr(x, y, w, h, r) {
+          if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); }
+          else ctx.fillRect(x, y, w, h);
+        }
+        function dot(x, y, r, color, glow) {
+          if (glow && GLOWS) {
+            ctx.save();
+            ctx.shadowColor = color; ctx.shadowBlur = 5;
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+            ctx.restore();
+          } else {
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+          }
+        }
+        for (const ln of lanes) {
+          const { d } = ln, ang = HEAD(d);
+          for (const c of ln.cars) {
+            const [x, y] = carPos(c, d);
+
+            // Fade out cars while behind the headline text / in the left and middle segment
+            let alpha = 1;
+            if (W >= 700) {
+              if (d.axis === 'ew' && d.dx === 1 && h1Rect) {
+                const fadeStart = h1Rect.right + 10;
+                const fadeEnd = fadeStart + 38;
+                if (x < fadeStart) {
+                  alpha = 0;
+                } else if (x < fadeEnd) {
+                  alpha = (x - fadeStart) / (fadeEnd - fadeStart);
+                }
+              }
+            }
+
+            const moving = c.v > 4;
+            const L = c.len, Wd = c.wid, g = c.shade;
+            const hw = Wd / 2 - 1.4;
+            ctx.save();
+            if (alpha < 1) ctx.globalAlpha = alpha;
+            ctx.translate(x, y); ctx.rotate(ang);
+            // headlight beams falling on the road — only some vehicles, like a
+            // real night (skipped on phones: a gradient per car per frame)
+            if (moving && c.beam && GLOWS) {
+              const reach = 24 + c.v * .22;
+              const bg = ctx.createLinearGradient(L / 2, 0, L / 2 + reach, 0);
+              bg.addColorStop(0, 'rgba(255,249,224,.09)');
+              bg.addColorStop(1, 'rgba(255,249,224,0)');
+              ctx.fillStyle = bg;
+              ctx.beginPath();
+              ctx.moveTo(L / 2 - 1, -hw - 1); ctx.lineTo(L / 2 + reach, -hw - 6);
+              ctx.lineTo(L / 2 + reach, hw + 6); ctx.lineTo(L / 2 - 1, hw + 1);
+              ctx.closePath(); ctx.fill();
+            }
+            // body
+            const dim = moving ? .85 : .62 + .08 * Math.sin(T * 2.6 + c.s * .35);
+            const rcol = `rgba(${g},${g - 3},${g - 10},${dim})`;
+            const GLASS = `rgba(14,17,19,${dim * 0.85})`;
+            const LINE = `rgba(20,24,28,${dim * 0.9})`;
+
+            ctx.fillStyle = rcol;
+            ctx.strokeStyle = LINE;
+            ctx.lineWidth = 0.8;
+
+            if (c.type === 'truck') {
+              // Cab (front section)
+              ctx.fillStyle = `rgba(${g - 15},${g - 18},${g - 25},${dim})`;
+              rr(L * 0.12, -Wd / 2, L * 0.38, Wd, 1.8);
+
+              // Seam between cab and cargo bed
+              ctx.strokeStyle = '#050708';
+              ctx.beginPath();
+              ctx.moveTo(L * 0.12, -Wd / 2);
+              ctx.lineTo(L * 0.12, Wd / 2);
+              ctx.stroke();
+
+              // Cargo Bed (back section - container box)
+              ctx.fillStyle = `rgba(${g + 18},${g + 14},${g + 4},${dim})`;
+              rr(-L / 2, -Wd / 2, L * 0.62, Wd, 1.2);
+
+              // Container panels/ribs
+              ctx.strokeStyle = 'rgba(10,12,14,0.4)';
+              ctx.lineWidth = 0.8;
+              for (let i = -L / 2 + 3; i < L * 0.1; i += 4) {
+                ctx.beginPath(); ctx.moveTo(i, -Wd / 2 + 1); ctx.lineTo(i, Wd / 2 - 1); ctx.stroke();
+              }
+
+              // Windshield & side windows
+              ctx.fillStyle = GLASS;
+              rr(L * 0.28, -Wd / 2 + 1.2, 3.2, Wd - 2.4, 0.8);
+              // Side mirrors
+              ctx.fillStyle = `rgba(${g - 30},${g - 33},${g - 40},${dim})`;
+              ctx.fillRect(L * 0.32, -Wd / 2 - 1.6, 1.6, 1.6);
+              ctx.fillRect(L * 0.32, Wd / 2, 1.6, 1.6);
+
+            } else if (c.type === 'van') {
+              // Boxy van body
+              ctx.fillStyle = `rgba(${g - 5},${g - 8},${g - 15},${dim})`;
+              rr(-L / 2, -Wd / 2, L, Wd, 2.2);
+
+              // Hood seam
+              ctx.strokeStyle = LINE;
+              ctx.lineWidth = 0.8;
+              ctx.beginPath(); ctx.moveTo(L * 0.24, -Wd / 2 + 0.8); ctx.lineTo(L * 0.24, Wd / 2 - 0.8); ctx.stroke();
+
+              // Roof ridges
+              ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+              ctx.lineWidth = 0.8;
+              for (let dy = -2; dy <= 2; dy += 2) {
+                ctx.beginPath(); ctx.moveTo(-L / 2 + 3, dy); ctx.lineTo(L * 0.2, dy); ctx.stroke();
+              }
+
+              // Windshield & Rear glass
+              ctx.fillStyle = GLASS;
+              rr(L * 0.12, -Wd / 2 + 1.2, 2.8, Wd - 2.4, 0.8);
+              rr(-L / 2 + 1.2, -Wd / 2 + 1.6, 1.8, Wd - 3.2, 0.6);
+
+              // Side mirrors
+              ctx.fillStyle = `rgba(${g - 15},${g - 18},${g - 25},${dim})`;
+              ctx.fillRect(L * 0.16, -Wd / 2 - 1.2, 1.2, 1.2);
+              ctx.fillRect(L * 0.16, Wd / 2, 1.2, 1.2);
+
+            } else if (c.type === 'suv') {
+              // SUV body
+              ctx.fillStyle = `rgba(${g + 8},${g + 6},${g - 2},${dim})`;
+              rr(-L / 2, -Wd / 2, L, Wd, 2.4);
+
+              // Hood seam
+              ctx.strokeStyle = LINE;
+              ctx.beginPath(); ctx.moveTo(L * 0.18, -Wd / 2 + 0.8); ctx.lineTo(L * 0.18, Wd / 2 - 0.8); ctx.stroke();
+
+              // Roof rack rails
+              ctx.fillStyle = `rgba(30,34,38,${dim})`;
+              ctx.fillRect(-L * 0.26, -Wd / 2 + 1.2, L * 0.44, 0.9);
+              ctx.fillRect(-L * 0.26, Wd / 2 - 2.1, L * 0.44, 0.9);
+
+              // Windshield, side glass, rear glass
+              ctx.fillStyle = GLASS;
+              rr(L * 0.05, -Wd / 2 + 1.2, 2.8, Wd - 2.4, 0.8);
+              rr(-L * 0.34, -Wd / 2 + 1.4, L * 0.32, Wd - 2.8, 1);
+
+              // Side mirrors
+              ctx.fillStyle = `rgba(${g - 10},${g - 13},${g - 20},${dim})`;
+              ctx.fillRect(L * 0.09, -Wd / 2 - 1.2, 1.2, 1.2);
+              ctx.fillRect(L * 0.09, Wd / 2, 1.2, 1.2);
+
+            } else if (c.type === 'police') {
+              // American black-and-white cruiser
+              ctx.fillStyle = `rgba(38,44,54,${dim})`;
+              rr(-L / 2, -Wd / 2, L, Wd, 2.4);
+              // white door panels
+              ctx.fillStyle = `rgba(224,227,231,${dim})`;
+              rr(-L * 0.18, -Wd / 2 + 0.8, L * 0.34, Wd - 1.6, 1);
+              // glass
+              ctx.fillStyle = GLASS;
+              rr(L * 0.08, -Wd / 2 + 1.2, 2.6, Wd - 2.4, 0.8);
+              rr(-L * 0.3, -Wd / 2 + 1.4, 2, Wd - 2.8, 0.8);
+              // roof lightbar — red / blue strobing
+              {
+                const ph = (T * 4.5 % 1) < .5;
+                dot(-1, -1.7, 1.2, ph ? 'rgba(255,60,60,.95)' : 'rgba(255,60,60,.2)', ph);
+                dot(-1, 1.7, 1.2, ph ? 'rgba(80,140,255,.2)' : 'rgba(80,140,255,.95)', !ph);
+              }
+            } else if (c.type === 'ambulance') {
+              // white box ambulance with red striping
+              ctx.fillStyle = `rgba(230,232,234,${dim})`;
+              rr(-L / 2, -Wd / 2, L, Wd, 2);
+              // side stripes
+              ctx.fillStyle = `rgba(212,58,48,${dim})`;
+              ctx.fillRect(-L / 2 + 2, -Wd / 2 + 0.7, L - 5, 1.1);
+              ctx.fillRect(-L / 2 + 2, Wd / 2 - 1.8, L - 5, 1.1);
+              // red cross on the roof
+              ctx.fillRect(-L * 0.18, -0.6, 4.6, 1.2);
+              ctx.fillRect(-L * 0.18 + 1.7, -2.3, 1.2, 4.6);
+              // cab seam + glass
+              ctx.strokeStyle = LINE;
+              ctx.beginPath(); ctx.moveTo(L * 0.16, -Wd / 2 + 0.8); ctx.lineTo(L * 0.16, Wd / 2 - 0.8); ctx.stroke();
+              ctx.fillStyle = GLASS;
+              rr(L * 0.22, -Wd / 2 + 1.2, 2.8, Wd - 2.4, 0.8);
+              // lightbar — red / white strobing over the cab
+              {
+                const ph = (T * 4.5 % 1) < .5;
+                dot(L * 0.36, -Wd / 2 + 1.2, 1.1, ph ? 'rgba(255,60,60,.95)' : 'rgba(255,255,255,.25)', ph);
+                dot(L * 0.36, Wd / 2 - 1.2, 1.1, ph ? 'rgba(255,255,255,.25)' : 'rgba(255,60,60,.95)', !ph);
+              }
+            } else {
+              // Sedan body (standard car)
+              ctx.fillStyle = `rgba(${g + 18},${g + 18},${g + 18},${dim})`;
+              rr(-L / 2, -Wd / 2, L, Wd, 2.5);
+
+              // Hood & trunk seams
+              ctx.strokeStyle = LINE;
+              ctx.beginPath(); ctx.moveTo(L * 0.18, -Wd / 2 + 0.8); ctx.lineTo(L * 0.18, Wd / 2 - 0.8); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(-L * 0.26, -Wd / 2 + 0.8); ctx.lineTo(-L * 0.26, Wd / 2 - 0.8); ctx.stroke();
+
+              // Windshield & Rear glass
+              ctx.fillStyle = GLASS;
+              rr(L * 0.04, -Wd / 2 + 1.2, 2.8, Wd - 2.4, 0.8);
+              rr(-L * 0.22, -Wd / 2 + 1.4, 2.2, Wd - 2.8, 0.8);
+
+              // Side mirrors
+              ctx.fillStyle = `rgba(${g - 5},${g - 8},${g - 15},${dim})`;
+              ctx.fillRect(L * 0.08, -Wd / 2 - 1.2, 1.2, 1.2);
+              ctx.fillRect(L * 0.08, Wd / 2, 1.2, 1.2);
+            }
+            // headlights — white, brighter when rolling
+            dot(L / 2 - .9, hw, 1, `rgba(255,253,240,${moving ? .95 : .45})`, moving);
+            dot(L / 2 - .9, -hw, 1, `rgba(255,253,240,${moving ? .95 : .45})`, moving);
+            // brake lights — red when braking or held
+            const br = c.brake;
+            dot(-L / 2 + .9, hw, 1.1, `rgba(255,72,58,${br ? .95 : .2})`, br);
+            dot(-L / 2 + .9, -hw, 1.1, `rgba(255,72,58,${br ? .95 : .2})`, br);
+            // indicators — hazards on dropped cars, turn signal near the junction
+            const blink = (T * 1.4 % 1) < .5;
+            if (blink) {
+              const sides = c.hazardT > 0 ? [1, -1]
+                : (c.turn && Math.abs(c.s) < 170) ? [c.turn === 'L' ? -1 : 1] : [];
+              for (const sd of sides) {
+                dot(L / 2 - 2.6, sd * hw, .9, 'rgba(255,176,46,.95)', true);
+                dot(-L / 2 + 2.6, sd * hw, .9, 'rgba(255,176,46,.95)', true);
+              }
+            }
+            ctx.restore();
+          }
+        }
+
+        // tap ripples — confirmation that a vehicle was placed
+        for (const rp of ripples) {
+          const a = Math.max(0, 1 - rp.t / .8);
+          ctx.strokeStyle = 'rgba(217,161,59,' + (a * .6) + ')';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(rp.x, rp.y, 6 + rp.t * 52, 0, 7); ctx.stroke();
+        }
+
+        // RL decision flashes float up beside the junction — desktop only;
+        // on phones they clip at the screen edge and there is no HUD to
+        // narrate the controller anyway
+        if (W >= 700) {
+          ctx.font = '12px "IBM Plex Mono", monospace';
+          ctx.textAlign = 'left';
+          flashes.forEach((f, i) => {
+            const a = Math.min(1, f.t * 4) * Math.max(0, 1 - f.t / 2.2);
+            ctx.fillStyle = 'rgba(217,161,59,' + (a * .95) + ')';
+            ctx.fillText(f.text, CX + ROAD + 24, CY - ROAD - 18 - (flashes.length - 1 - i) * 19 - f.t * 6);
+          });
+        }
+      }
+
+      let last = performance.now(), running = true;
+      const vio = new IntersectionObserver(es => { running = es[0].isIntersecting; }, {});
+      vio.observe(cv);
+      tlog('watching the junction');
+      tlog('old-school timer running');
+      (function loop(t) {
+        const dt = Math.min((t - last) / 1000, .05); last = t;
+        if (running) { step(dt); telemetry(dt); draw(); }
+        requestAnimationFrame(loop);
+      })(last);
+    })();
+
+    /* ── ambient page-wide city background nodes (networked intersections) ── */
+    (function bgCityNodes() {
+      const cv = document.getElementById('bg-dots');
+      if (!cv) return;
+      // phones: the grid is barely visible behind content and costs a second
+      // full-screen canvas loop — the hero sim needs every frame it can get
+      if (matchMedia('(max-width: 700px)').matches) { cv.remove(); return; }
+      const ctx = cv.getContext('2d');
+      const DPR = Math.min(devicePixelRatio || 1, 2);
+      let W = 0, H = 0;
+      let nodes = [];
+      let connections = [];
+      let pulses = [];
+
+      function getRoadOpacity(x, y) {
+        const CX = W * (W < 700 ? .68 : .66);
+        const CY = H * (W < 700 ? .38 : .48);
+        const ROAD = W < 700 ? 48 : 72; // half road width
+        const fadeDist = 60; // distance over which background fades in to full visibility
+
+        const distX = Math.abs(x - CX);
+        const distY = Math.abs(y - CY);
+
+        if (distX <= ROAD || distY <= ROAD) return 0;
+
+        const gapX = distX - ROAD;
+        const gapY = distY - ROAD;
+
+        const mX = Math.min(1, Math.max(0, gapX / fadeDist));
+        const mY = Math.min(1, Math.max(0, gapY / fadeDist));
+
+        return mX * mY;
+      }
+
+      function spawnPulse() {
+        if (connections.length === 0) return;
+        const conn = connections[Math.floor(Math.random() * connections.length)];
+        const swap = Math.random() < 0.5;
+        const u = swap ? conn.u : conn.v;
+        const v = swap ? conn.v : conn.u;
+        pulses.push({
+          u,
+          v,
+          progress: Math.random(),
+          speed: 0.12 + Math.random() * 0.12
+        });
+      }
+
+      function resize() {
+        W = cv.clientWidth; H = cv.clientHeight;
+        cv.width = W * DPR; cv.height = H * DPR;
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+        nodes = [];
+        connections = [];
+        pulses = [];
+
+        // loose grid setup
+        const cellW = 160, cellH = 160;
+        const cols = Math.ceil(W / cellW) + 1;
+        const rows = Math.ceil(H / cellH) + 1;
+        const grid = [];
+
+        for (let r = 0; r < rows; r++) {
+          grid[r] = [];
+          for (let c = 0; c < cols; c++) {
+            const node = {
+              x: c * cellW - 20 + Math.random() * (cellW - 40),
+              y: r * cellH - 20 + Math.random() * (cellH - 40),
+              pulseOffset: Math.random() * Math.PI * 2,
+              pulseSpeed: 1 + Math.random() * 1.5,
+              sz: 1.0 + Math.random() * 1.2,
+              neighbors: []
+            };
+            nodes.push(node);
+            grid[r][c] = node;
+          }
+        }
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const u = grid[r][c];
+            if (r + 1 < rows) {
+              const v = grid[r + 1][c];
+              u.neighbors.push(v);
+              v.neighbors.push(u);
+              connections.push({ u, v });
+            }
+            if (c + 1 < cols) {
+              const v = grid[r][c + 1];
+              u.neighbors.push(v);
+              v.neighbors.push(u);
+              connections.push({ u, v });
+            }
+          }
+        }
+
+        const count = Math.min(22, Math.max(6, Math.floor(nodes.length * 0.16)));
+        for (let i = 0; i < count; i++) {
+          spawnPulse();
+        }
+      }
+
+      resize(); addEventListener('resize', resize);
+      let scrollY = window.scrollY;
+      addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
+
+      let T = 0, last = performance.now();
+      (function loop(t) {
+        const dt = Math.min((t - last) / 1000, .05); last = t; T += dt;
+        ctx.clearRect(0, 0, W, H);
+
+        function getPos(node) {
+          let y = (node.y - scrollY * 0.22) % H;
+          if (y < 0) y += H;
+          return [node.x, y];
+        }
+
+        // Draw connections (faint lines)
+        for (const conn of connections) {
+          const [x1, y1] = getPos(conn.u);
+          const [x2, y2] = getPos(conn.v);
+
+          const opacity1 = getRoadOpacity(x1, y1);
+          const opacity2 = getRoadOpacity(x2, y2);
+          const lineOpacity = Math.max(opacity1, opacity2);
+          if (lineOpacity <= 0) continue;
+
+          if (Math.abs(y1 - y2) < H * 0.5 && Math.abs(x1 - x2) < W * 0.5) {
+            ctx.strokeStyle = 'rgba(220, 218, 210, ' + (0.008 * lineOpacity) + ')'; // extremely dim grid lines
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+        }
+
+        // Update & Draw pulses
+        for (let i = pulses.length - 1; i >= 0; i--) {
+          const p = pulses[i];
+          p.progress += p.speed * dt;
+
+          const [x1, y1] = getPos(p.u);
+          const [x2, y2] = getPos(p.v);
+
+          if (Math.abs(y1 - y2) >= H * 0.5 || Math.abs(x1 - x2) >= W * 0.5) {
+            pulses.splice(i, 1);
+            spawnPulse();
+            continue;
+          }
+
+          if (p.progress >= 1) {
+            const nextNode = p.v.neighbors.length > 0
+              ? p.v.neighbors[Math.floor(Math.random() * p.v.neighbors.length)]
+              : null;
+            if (nextNode && nextNode !== p.u) {
+              p.u = p.v;
+              p.v = nextNode;
+              p.progress = 0;
+            } else {
+              pulses.splice(i, 1);
+              spawnPulse();
+              continue;
+            }
+          }
+
+          const px = x1 + (x2 - x1) * p.progress;
+          const py = y1 + (y2 - y1) * p.progress;
+          const pulseOpacity = getRoadOpacity(px, py);
+
+          if (pulseOpacity > 0) {
+            ctx.fillStyle = 'rgba(217, 161, 59, ' + (0.32 * pulseOpacity) + ')'; // dim traveling pulse
+            ctx.beginPath();
+            ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Draw nodes (tiny dots)
+        for (const node of nodes) {
+          const [nx, ny] = getPos(node);
+          const roadOpacity = getRoadOpacity(nx, ny);
+          if (roadOpacity <= 0) continue;
+          const a = (0.015 + 0.035 * (.5 + .5 * Math.sin(T * node.pulseSpeed + node.pulseOffset))) * roadOpacity; // extremely dim nodes
+          ctx.fillStyle = 'rgba(220, 218, 210, ' + a + ')';
+          ctx.fillRect(nx - node.sz / 2, ny - node.sz / 2, node.sz, node.sz);
+        }
+
+        // Erase anything drawn inside the road/intersection lanes
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        const CX_mask = W * (W < 700 ? .68 : .66);
+        const CY_mask = H * (W < 700 ? .38 : .48);
+        const ROAD_mask = W < 700 ? 48 : 72;
+        ctx.fillRect(CX_mask - ROAD_mask, 0, ROAD_mask * 2, H);
+        ctx.fillRect(0, CY_mask - ROAD_mask, W, ROAD_mask * 2);
+        ctx.restore();
+
+        // reduced motion: leave a single static frame, no animation loop
+        if (!REDUCED) requestAnimationFrame(loop);
+      })(last);
+    })();
+
+    /* ── cinematic GSAP ScrollTrigger transitions ── */
+    if (useGsap) {
+      gsap.registerPlugin(ScrollTrigger);
+
+      // Hero Section Timeline (scroll out only)
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: "header",
+          start: "top top",
+          end: "bottom top",
+          scrub: 0.5,
+        }
+      })
+        .to(".hero-content", { y: -80, opacity: 0, ease: "power1.in", duration: 1 })
+        .to("#sim", { y: -50, opacity: 0.15, ease: "power1.in", duration: 1 }, 0)
+        .to(".sim-hud", { y: -60, opacity: 0, ease: "power1.in", duration: 1 }, 0);
+
+      // Sections: entrance-only reveals — once in, content stays fully
+      // opaque for as long as the reader is on it
+      const secIO = new IntersectionObserver(entries => entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        secIO.unobserve(en.target);
+        const reveals = en.target.querySelectorAll('.rv');
+        gsap.fromTo(reveals.length ? reveals : (en.target.querySelector('.wrap') || en.target),
+          { y: 48, opacity: 0 },
+          { y: 0, opacity: 1, ease: "power2.out", stagger: 0.12, duration: 1, overwrite: true });
+      }), { threshold: .12, rootMargin: '0px 0px -10% 0px' });
+      document.querySelectorAll("#results, #how, #demo, #built, #cta")
+        .forEach(el => secIO.observe(el));
+    }
+  </script>
+</body>
+
+</html>
