@@ -27,6 +27,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
+          # create/switch the Pages site to GitHub Actions automatically
           enablement: true
 
       - name: Upload Artifact
