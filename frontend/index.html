@@ -72,8 +72,21 @@
     </div>
   </nav>
 
-  <header>
-    <canvas id="sim"></canvas>
+  <header id="hero">
+    <!-- page 1 — the constellation city over the hidden hero. The pinned
+         scroll dives into the celestial junction (background.js draws it
+         at the live junction's exact screen spot, same 4-arm form) while
+         the real junction fades in beneath it — a match cut, not a page
+         change. main.js owns the choreography. -->
+    <div id="dive-overlay" aria-hidden="true">
+      <div class="dive-content">
+        <p class="dive-brand">TRAF<i>FIX</i></p>
+        <p class="dive-line">A city of signals. <em>One learns.</em></p>
+      </div>
+      <div class="dive-hint">SCROLL</div>
+    </div>
+    <div class="hero-stage">
+      <canvas id="sim"></canvas>
     <div class="hero-fade"></div>
     <div class="hero-overlay-left"></div>
     <div class="wrap hero-content">
@@ -103,7 +116,8 @@
       <button class="hud-inject" id="btn-inject">▸ inject traffic</button>
       <div class="hud-hint">card: switch controller · road: drop a car</div>
     </div>
-    <div class="scroll-hint">SCROLL</div>
+      <div class="scroll-hint">SCROLL</div>
+    </div>
   </header>
 
   <section id="results">

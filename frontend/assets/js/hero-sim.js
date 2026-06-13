@@ -612,7 +612,11 @@
         ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
       }
     }
-    for (const ln of lanes) {
+    // during the dive's dot-phase the constellation's orange dots ARE the
+    // cars; suppress the sim's own car sprites so dots and cars never show at
+    // once. At HANDOFF seedIntro() spawns cars exactly where the dots landed.
+    const __dv = +window.__tfxDive || 0;
+    if (!(__dv > 0.012 && __dv < 0.90)) for (const ln of lanes) {
       const { d } = ln, ang = HEAD(d);
       for (const c of ln.cars) {
         const [x, y] = carPos(c, d);
@@ -844,14 +848,74 @@
     }
   }
 
+  /* intro handoff: a tidy queue of stopped cars on the four approaches — the
+     exact screen slots the constellation dots fly into, so dot → car is
+     seamless. Deterministic from the live geometry; background.js reads the
+     same slots via window.__tfxHero.slots() and aims its dots there. */
+  let introSeeded = false, introLayout = null;
+  /* a fixed-per-load RANDOM layout — each approach gets 1–4 cars, each on a
+     carriageway at its own queue depth (a small per-lane map). The structure
+     (and the count) is decided once; positions are derived from the live
+     geometry on demand so they track resizes. background.js maps one orange
+     dot to each entry and hands off 1:1 — so dot count == car count. */
+  function buildIntroLayout() {
+    introLayout = [];
+    const maxN = (W < 700 || LOWPOW) ? 2 : 4;         // fewer cars per approach on phones
+    for (let di = 0; di < lanes.length; di++) {
+      const n = 1 + (Math.random() * maxN | 0);       // 1..maxN cars on this approach
+      const depth = [0, 0];                           // next free slot per carriageway
+      for (let i = 0; i < n; i++) {
+        const laneIdx = Math.random() < .5 ? 0 : 1;
+        introLayout.push({ di, laneIdx, k: depth[laneIdx]++ });
+      }
+    }
+  }
+  function introSlots() {
+    if (!introLayout) buildIntroLayout();
+    return introLayout.map(c => {
+      const d = lanes[c.di].d, sign = d.off > 0 ? 1 : -1;
+      const s = -STOP - 8 - c.k * (CAR_L + GAP);      // queued back from the stop line
+      const o = sign * (ROAD * 0.25 + ROAD * 0.5 * c.laneIdx);
+      return {
+        x: CX + d.dx * s + (d.dy !== 0 ? o : 0),
+        y: CY + d.dy * s + (d.dx !== 0 ? o : 0),
+        di: c.di, laneIdx: c.laneIdx, s,
+      };
+    });
+  }
+  function seedIntro() {
+    for (const ln of lanes) ln.cars.length = 0;
+    const slots = introSlots();
+    for (let di = 0; di < lanes.length; di++)                // queue front→back per lane
+      slots.filter(sl => sl.di === di).sort((a, b) => b.s - a.s)
+        .forEach(sl => lanes[di].cars.push(makeCar(sl.s, 0, false, sl.laneIdx)));
+  }
+
   let last = performance.now(), running = true;
   const vio = new IntersectionObserver(es => { running = es[0].isIntersecting; }, {});
   vio.observe(cv);
   tlog('watching the junction');
   tlog('old-school timer running');
+  // the dive hands the junction to the sim at ~90% progress: the orange
+  // constellation dots have flowed onto the approaches, so we spawn the real
+  // cars on those exact slots (seedIntro) and let the sim run from there.
+  // While the dots are still flowing (the dot-phase) the sim is held, so its
+  // motion doesn't fight the morph.
+  function diveStep(dt) {
+    const dv = +window.__tfxDive || 0;
+    if (dv >= 0.90 && !introSeeded) { introSeeded = true; seedIntro(); }
+    else if (dv < 0.5 && introSeeded) { introSeeded = false; }
+    const inDot = dv > 0.012 && dv < 0.90;
+    if (!inDot) { step(dt); telemetry(dt); }
+    draw();
+  }
+  // dev: advance + draw one frame synchronously for the capture harness (the
+  // preview window throttles rAF to zero). slots/seedIntro let background.js
+  // aim its dots at — and hand off to — the real car positions.
+  window.__tfxHero = { tick: diveStep, slots: introSlots, seedIntro };
   (function loop(t) {
     const dt = Math.min((t - last) / 1000, .05); last = t;
-    if (running) { step(dt); telemetry(dt); draw(); }
+    if (running) diveStep(dt);
     requestAnimationFrame(loop);
   })(last);
 })();

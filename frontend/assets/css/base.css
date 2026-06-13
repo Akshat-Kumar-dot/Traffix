@@ -260,13 +260,24 @@ nav.menu-open .nav-burger span:nth-child(3) {
 }
 
 /* ── hero ────────────────────────────────────────────── */
-body>header {
+/* id selector, not body>header — GSAP's pin wraps the header in a
+   spacer div, which would break a child-combinator match */
+#hero {
   position: relative;
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
   align-items: center;
   overflow: hidden
+}
+
+/* everything that IS the hero (sim, fades, content, HUD) lives in one
+   stage layer so the dive can crossfade it in beneath the constellation */
+.hero-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
 }
 
 #sim {
@@ -423,6 +434,128 @@ h1 .ln:nth-child(2) span {
     opacity: 1;
     transform: none
   }
+}
+
+/* ── dive — page 1 title card pinned over the hidden hero ──
+   Hidden unless main.js enables the dive (body.has-dive): without
+   GSAP the hero must simply be the first thing you see. GSAP scrubs
+   the OVERLAY's opacity; the children carry the entrance animations,
+   so inline styles and animation fill never fight over one element. */
+#dive-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+body.has-dive #dive-overlay {
+  display: flex;
+}
+
+.dive-brand {
+  opacity: 0;
+  animation: fadeup .9s ease .15s forwards;
+  font-weight: 700;
+  font-size: clamp(40px, 6vw, 72px);
+  letter-spacing: .18em;
+  text-indent: .18em;
+  /* recentre the letterspaced mark */
+  line-height: 1;
+}
+
+.dive-brand i {
+  font-style: normal;
+  color: var(--amber)
+}
+
+.dive-line {
+  margin-top: 22px;
+  font-family: var(--mono);
+  font-size: clamp(13px, 1.5vw, 16px);
+  letter-spacing: .08em;
+  color: var(--muted);
+  opacity: 0;
+  animation: fadeup .9s ease .4s forwards;
+}
+
+.dive-line em {
+  font-style: normal;
+  color: var(--amber)
+}
+
+/* same look as the hero's scroll hint */
+.dive-hint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  animation: fadeup 1s ease 1.3s forwards;
+}
+
+.dive-hint::after {
+  content: '';
+  width: 1px;
+  height: 34px;
+  background: var(--faint);
+  animation: drip 2.2s ease-in-out infinite;
+}
+
+/* drip also lives in desktop.css for the hero hint — duplicated here
+   (identically) so the dive hint animates on phones too */
+@keyframes drip {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top
+  }
+
+  45% {
+    transform: scaleY(1);
+    transform-origin: top
+  }
+
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom
+  }
+
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom
+  }
+}
+
+/* with the dive playing above it, the hero's entrance animations hold
+   until the reveal point of the dive (main.js adds .hero-in there) */
+body.has-dive #hero:not(.hero-in) h1 .ln,
+body.has-dive #hero:not(.hero-in) h1 .ln span,
+body.has-dive #hero:not(.hero-in) .hero-sub,
+body.has-dive #hero:not(.hero-in) .hero-cta,
+body.has-dive #hero:not(.hero-in) .sim-hud,
+body.has-dive #hero:not(.hero-in) .scroll-hint {
+  animation-play-state: paused;
+}
+
+/* the invisible hero shouldn't take clicks or show the road crosshair
+   while page 1 is up */
+body.has-dive #hero:not(.hero-in) .hero-stage {
+  pointer-events: none;
+}
+
+body.has-dive #bg-dots {
+  will-change: transform, opacity;
 }
 
 /* ── scroll reveal ───────────────────────────────────── */

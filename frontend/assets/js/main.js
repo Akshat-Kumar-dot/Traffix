@@ -224,12 +224,124 @@
   if (useGsap) {
     gsap.registerPlugin(ScrollTrigger);
 
-    // Hero Section Timeline (scroll out only)
+    /* ── the dive: page 1 is the whole city at night, pinned over the
+       hidden hero. Scrolling zooms the celestial junction toward the
+       camera while the rest of the city settles into the background;
+       the dotted junction then RESOLVES into the real one in the same
+       spot (its dots crossfade into roads) — a morph, not a cut.
+
+       The zoom is rendered INSIDE the canvas (background.js reads the
+       globals below), not via a CSS transform on the canvas element —
+       so the constellation never blanks out and there's no scale-pop
+       when it returns as the faint page-2 background. ── */
+    ScrollTrigger.config({ ignoreMobileResize: true });
+    const hdr = document.getElementById('hero');
+    const overlay = document.getElementById('dive-overlay');
+    if (hdr && overlay) {
+      document.body.classList.add('has-dive');
+      const LOWPOW = window.TFX_LOW_POWER === true;
+      // the city never fully goes out: page 2 keeps it visibly lit behind
+      // the live junction (background.js's erase still clears the roads)
+      const REST = .3;
+
+      // page 1 opens at full brightness, no zoom — background.js loads
+      // after this script and reads these globals as its start values
+      window.__tfxBoost = 1;
+      window.__tfxZoomScale = 1;
+      window.__tfxZoomAlpha = 0;
+      window.__tfxDive = 0;     // monotonic dive progress, read live by background.js
+      const d = { boost: 1, zScale: 1, zAlpha: 0 };
+      const push = () => {
+        window.__tfxBoost = d.boost;
+        window.__tfxZoomScale = d.zScale;
+        window.__tfxZoomAlpha = d.zAlpha;
+        if (window.__tfxBg) window.__tfxBg.setBoost(d.boost);
+      };
+
+      gsap.set('.hero-stage', { opacity: 0 });   // hero hidden until the reveal
+      const tl = gsap.timeline({
+        defaults: { onUpdate: push },
+        scrollTrigger: {
+          // a generous pin (≈1.5 screens) + heavy scrub smoothing makes the
+          // dive read slowly and glide, instead of tracking the wheel 1:1
+          trigger: hdr, start: 'top top', end: LOWPOW ? '+=130%' : '+=150%',
+          scrub: 1.2, pin: true, anticipatePin: 1,
+          // release the hero's CSS entrance animations at the reveal point —
+          // onUpdate (not a timeline call) so a mid-page reload still fires
+          // it. Hysteresis keeps the boundary from thrashing on reverse.
+          onUpdate(self) {
+            window.__tfxDive = self.progress;   // background.js reads this live
+            if (self.progress > .55) hdr.classList.add('hero-in');
+            else if (self.progress < .35) hdr.classList.remove('hero-in');
+          }
+        }
+      });
+      tl
+        // title lingers, then lifts away
+        .fromTo(overlay, { opacity: 1 }, { opacity: 0, duration: .32, ease: 'power1.in' }, .04)
+        // the city recedes to its resting brightness across the whole dive
+        .to(d, { boost: REST, duration: 1, ease: 'power1.inOut' }, 0)
+        // the junction zooms steadily toward the camera (keeps growing —
+        // never shrinks on screen; on reverse it eases back out into the city)
+        .to(d, { zScale: LOWPOW ? 3 : 3.6, duration: .92, ease: 'power2.inOut' }, 0)
+        // its cinematic presence rises fast, holds, then fades as the real
+        // junction takes over — the dots dissolve into roads
+        .to(d, { zAlpha: 1, duration: .18, ease: 'power1.out' }, 0)
+        .to(d, { zAlpha: 0, duration: .34, ease: 'power1.inOut' }, .56)
+        // the real junction crossfades in over the fading dots (the morph)
+        .to('.hero-stage', { opacity: 1, duration: .34, ease: 'sine.inOut' }, .5);
+    }
+
+    /* ── dev capture harness — the preview window throttles rAF to 0, so
+       canvas frames never advance on their own. step() advances both
+       sims synchronously; capture() composites #bg-dots + #sim and POSTs
+       a JPEG to .claude/capture-server.py (:8123) so frames are viewable. ── */
+    window.__tfx = {
+      step(sec) {
+        const dt = 1 / 60; let n = Math.max(1, Math.round((sec || 1 / 60) / dt));
+        while (n--) {
+          if (window.__tfxBg) window.__tfxBg.tick(dt);
+          if (window.__tfxHero) window.__tfxHero.tick(dt);
+        }
+      },
+      capture(width, gain) {
+        width = width || 900; gain = gain || 1;
+        const bg = document.getElementById('bg-dots');
+        const sim = document.getElementById('sim');
+        const w = width, h = Math.round(w * innerHeight / innerWidth);
+        const o = document.createElement('canvas'); o.width = w; o.height = h;
+        const g = o.getContext('2d');
+        g.fillStyle = '#0b0d0e'; g.fillRect(0, 0, w, h);
+        if (bg) {
+          g.drawImage(bg, 0, 0, w, h);
+          // inspection gain: re-add the (dim) art additively so faint dots
+          // are legible in the JPEG — does not reflect on-screen brightness
+          if (gain > 1) { g.globalCompositeOperation = 'lighter';
+            for (let i = 1; i < gain; i++) g.drawImage(bg, 0, 0, w, h);
+            g.globalCompositeOperation = 'source-over'; }
+        }
+        const stage = document.querySelector('.hero-stage');
+        const sop = stage ? (parseFloat(getComputedStyle(stage).opacity) || 0) : 0;
+        if (sop > 0 && sim) { g.globalAlpha = sop; g.drawImage(sim, 0, 0, w, h); g.globalAlpha = 1; }
+        const data = o.toDataURL('image/jpeg', .72).split(',')[1];
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://127.0.0.1:8123/save', false);
+        try { xhr.send(data); } catch (e) { return 'POST failed: ' + e; }
+        const ov = document.getElementById('dive-overlay');
+        const ovop = ov ? (parseFloat(getComputedStyle(ov).opacity) || 0) : 0;
+        return 'saved ' + w + 'x' + h + ' · stage=' + sop.toFixed(2) + ' overlay=' + ovop.toFixed(2)
+          + ' zS=' + (+window.__tfxZoomScale).toFixed(2) + ' zA=' + (+window.__tfxZoomAlpha).toFixed(2)
+          + ' boost=' + (+window.__tfxBoost).toFixed(2);
+      }
+    };
+
+    // Hero scroll-out — keyed to #results' approach, not the header's own
+    // position: the header is pinned, so its box no longer describes the exit
     gsap.timeline({
       scrollTrigger: {
-        trigger: "header",
-        start: "top top",
-        end: "bottom top",
+        trigger: "#results",
+        start: "top bottom",
+        end: "top top",
         scrub: 0.5,
       }
     })

@@ -201,7 +201,8 @@
     display: none;
   }
 
-  body>header {
+  #hero,
+  .hero-stage {
     align-items: flex-start;
   }
 
